@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  meFACE
+//  faceADE
 //
 //  Created by Katherine Guo on 4/23/24.
 //

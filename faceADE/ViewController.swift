@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  meFACE
+//  faceADE
 //
 //  Created by Katherine Guo on 4/23/24.
 //
@@ -12,33 +12,36 @@ import Photos
 import ReplayKit
 
 
-class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-
-    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return pickerData.count
-    }
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        return pickerData[row]
-    }
-
-    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        viewOption = pickerData[row]
-        // Optionally, update the label immediately after selection
-        // updateSymmetryLabel()
-    }
+class ViewController: UIViewController, ARSCNViewDelegate{
+//    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+//        return 1
+//    }
+//
+//    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+//        return pickerData.count
+//    }
+//    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+//        return pickerData[row]
+//    }
+//
+//    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+//        viewOption = pickerData[row]
+//        // Optionally, update the label immediately after selection
+//        // updateSymmetryLabel()
+//    }
     
     
     @IBOutlet weak var sceneView: ARSCNView!
     var faceGeometry: ARSCNFaceGeometry?
     var symmetryLabel: UILabel!
+    var mouthLabel: UILabel!
+    var eyeLabel: UILabel!
     
     var userId: String = "katherine" // Replace this with actual user ID logic
 //    var maxHeightDifference: Float = 0.0
 //    var maxWidthDifference: Float = 0.0
     var maxDentalShow: Float = 0.0
+    var minDentalShow: Float = .greatestFiniteMagnitude
     var minLeftMouthCorner_x: Float = .greatestFiniteMagnitude
     var maxLeftMouthCorner_x: Float = 0.0
     var minLeftMouthCorner_y: Float = .greatestFiniteMagnitude
@@ -48,6 +51,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
     var minRightMouthCorner_y: Float = .greatestFiniteMagnitude
     var maxRightMouthCorner_y: Float = 0.0
     
+    var chinPosition: SCNVector3?
+
 //    var currHeightDifference: Float = 0.0
 //    var currWidthDifference: Float = 0.0
 //    var savedHeightDifference: Float = 0.0
@@ -56,6 +61,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
     var minRightEyeClosure: Float = .greatestFiniteMagnitude
     var maxLeftEye: Float = 0.0
     var maxRightEye: Float = 0.0
+    
 //    var records: [FaceRecord] = []
 
     
@@ -77,10 +83,11 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
     
     var screenRecorder = RPScreenRecorder.shared()
     var isRecording = false
+
     
-    var pickerView: UIPickerView!
-    var pickerData: [String] = ["Smile", "Eye Closure"] // Example options
-    var viewOption: String = "Smile" // Default selected option
+//    var pickerView: UIPickerView!
+//    var pickerData: [String] = ["Smile", "Eye Closure"] // Example options
+//    var viewOption: String = "Smile" // Default selected option
     
     
 //    @IBAction func saveRecords(_ sender: UIBarButtonItem) {
@@ -100,6 +107,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        
         
         // Initialize the ARSCNView
 //        sceneView = ARSCNView(frame: self.view.frame)
@@ -122,7 +130,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
             faceGeometry = geom
             if let material = faceGeometry?.firstMaterial {
                 material.diffuse.contents = UIColor.clear
-//                material.transparency = 1
+                material.transparency = 0
                 material.fillMode = .lines // Optional: for a wireframe look
             }
         }
@@ -285,20 +293,62 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
             symmetryLabel.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
         ])
         
-        // Initialize and add pickerView
-        pickerView = UIPickerView()
-        pickerView.translatesAutoresizingMaskIntoConstraints = false
-        pickerView.delegate = self
-        pickerView.dataSource = self
-        self.view.addSubview(pickerView)
+        // Initialize and configure mouthLabel
+        mouthLabel = UILabel()
+        mouthLabel.translatesAutoresizingMaskIntoConstraints = false
+        mouthLabel.textColor = .white
+        mouthLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        mouthLabel.textAlignment = .left
+        mouthLabel.numberOfLines = 0 // Allow multiple lines
+        mouthLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         
-        // Constraints for pickerView
+        // Initialize and configure eyeLabel
+        eyeLabel = UILabel()
+        eyeLabel.translatesAutoresizingMaskIntoConstraints = false
+        eyeLabel.textColor = .white
+        eyeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        eyeLabel.textAlignment = .left
+        eyeLabel.numberOfLines = 0 // Allow multiple lines
+        eyeLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        
+        // Create a vertical stack view to hold both labels
+        let stackView = UIStackView(arrangedSubviews: [mouthLabel, eyeLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 10
+        stackView.alignment = .fill
+        stackView.distribution = .fill// Equally
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(stackView)
+        
+        // Add constraints to stackView
+//        NSLayoutConstraint.activate([
+//            stackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+//            stackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100),
+//            stackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
+//            stackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
+//        ])
         NSLayoutConstraint.activate([
-                pickerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 10),
-                pickerView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-                pickerView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
-            ])
+            stackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            stackView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 20), // Changed from bottom to top
+            stackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
+            stackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
+        ])
+            
         
+//        // Initialize and add pickerView
+//        pickerView = UIPickerView()
+//        pickerView.translatesAutoresizingMaskIntoConstraints = false
+//        pickerView.delegate = self
+//        pickerView.dataSource = self
+//        self.view.addSubview(pickerView)
+//        
+//        // Constraints for pickerView
+//        NSLayoutConstraint.activate([
+//                pickerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 10),
+//                pickerView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+//                pickerView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
+//            ])
+//        
 //        let saveButton = UIButton(type: .system)
 //        saveButton.setTitle("Save Record", for: .normal)
 //        saveButton.addTarget(self, action: #selector(saveRecord), for: .touchUpInside)
@@ -362,7 +412,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
         
         // Set material properties
         let material = faceGeometry.firstMaterial!
-        material.transparency = 0.2
+        material.transparency = 0.25
         material.diffuse.contents = UIColor.white // Set a visible color to test visibility
         material.fillMode = .lines // Wireframe mode
         
@@ -575,15 +625,13 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
                 
                 
 //    }
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+
+        func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
             guard let faceAnchor = anchor as? ARFaceAnchor,
                   let faceGeometry = node.childNodes.first?.geometry as? ARSCNFaceGeometry else { return }
 
-            DispatchQueue.global(qos: .userInitiated).async {
-                self.updateFaceGeometry(faceAnchor: faceAnchor, faceGeometry: faceGeometry, node: node)
-            }
+            self.updateFaceGeometry(faceAnchor: faceAnchor, faceGeometry: faceGeometry, node: node)
         }
-
         func updateFaceGeometry(faceAnchor: ARFaceAnchor, faceGeometry: ARSCNFaceGeometry, node: SCNNode) {
             faceGeometry.update(from: faceAnchor.geometry)
             
@@ -592,34 +640,51 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
                 let vertexStride = vertexSource.dataStride
                 let vertexOffset = vertexSource.dataOffset
                 
-                let mouthIndices = [638, 189] // , 188, 637]
+//                let mouthIndices = [638, 189] // , 188, 637]
+                let mouthIndices = [397, 827] //  [172, 621] // [190, 639]
                 let eyeIndices = [1107, 1094, 1075, 1063]
                 let insideMouthIndices =  [249, 393, 250, 251, 252, 253, 254, 255, 256, 24, 691, 690, 689, 688, 687, 686, 685, 823, 684, 834, 740, 683, 682, 710, 725, 709, 700, 25, 265, 274, 290, 275, 247, 248, 305, 404]
-                
-                if self.viewOption == "Smile" {
-                    for i in mouthIndices {
-                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
-                    }
-//                    for i in insideMouthIndices {
-//                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
-//                    }
-                    for i in eyeIndices {
-                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .gray)
-                    }
-                } else if self.viewOption == "Eye Closure" {
-//                    for i in insideMouthIndices {
-//                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .gray)
-//                    }
-                    for i in eyeIndices {
-                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
-                    }
-                    for i in mouthIndices {
-                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .gray)
-                    }
+                for i in mouthIndices {
+                    self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+                }
+                for i in eyeIndices {
+                    self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
                 }
                 
-                guard let leftMouthVertex = getVertexPosition(from: vertexData, at: 188, stride: vertexStride, offset: vertexOffset),
-                      let rightMouthVertex = getVertexPosition(from: vertexData, at: 637, stride: vertexStride, offset: vertexOffset),
+                // Retrieve the chin vertex position
+                guard let chinVertex = getVertexPosition(from: vertexData, at: 1047, stride: vertexStride, offset: vertexOffset) else {
+                    print("Chin vertex not found")
+                    return
+                }
+                //self.placeDotOnVertex(at: 1047, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+
+                // Store the chin position for later use
+                self.chinPosition = chinVertex
+                
+//                if self.viewOption == "Smile" {
+//                    for i in mouthIndices {
+//                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+//                    }
+////                    for i in insideMouthIndices {
+////                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+////                    }
+//                    for i in eyeIndices {
+//                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .gray)
+//                    }
+//                } else if self.viewOption == "Eye Closure" {
+////                    for i in insideMouthIndices {
+////                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .gray)
+////                    }
+//                    for i in eyeIndices {
+//                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+//                    }
+//                    for i in mouthIndices {
+//                        self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .gray)
+//                    }
+//                }
+                // 188, 637
+                guard let leftMouthVertex = getVertexPosition(from: vertexData, at: 827, stride: vertexStride, offset: vertexOffset),
+                      let rightMouthVertex = getVertexPosition(from: vertexData, at: 397, stride: vertexStride, offset: vertexOffset),
                       let leftEyeTopVertex = getVertexPosition(from: vertexData, at: 1094, stride: vertexStride, offset: vertexOffset),
                       let leftEyeBottomVertex = getVertexPosition(from: vertexData, at: 1107, stride: vertexStride, offset: vertexOffset),
                       let rightEyeTopVertex = getVertexPosition(from: vertexData, at: 1075, stride: vertexStride, offset: vertexOffset),
@@ -632,8 +697,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
                    }
                }
                 
-                let leftMouthHeightCM = leftMouthVertex.y * 100 + 5
-                let rightMouthHeightCM = rightMouthVertex.y * 100 + 5
+                let leftMouthHeightCM = (leftMouthVertex.y - chinVertex.y) * 100 // leftMouthVertex.y * 100 + 5
+                let rightMouthHeightCM = (rightMouthVertex.y - chinVertex.y) * 100 // rightMouthVertex.y * 100 + 5
                 
                 let leftMouthWidthCM = abs(leftMouthVertex.x * 100)
                 let rightMouthWidthCM = abs(rightMouthVertex.x * 100)
@@ -667,39 +732,66 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
                 
                 let insideMouthArea = calculatePolygonArea(vertices: insideMouthNodes) * 10000
                 self.maxDentalShow = max(self.maxDentalShow, insideMouthArea)
+                self.minDentalShow = min(self.minDentalShow, insideMouthArea)
                 
                 DispatchQueue.main.async {
-                    switch self.viewOption {
-                    case "Smile":
-                        self.updateSmileSymmetryLabel(
-                            left_x: leftMouthWidthCM,
-                            min_left_x: self.minLeftMouthCorner_x,
-                            max_left_x: self.maxLeftMouthCorner_x,
-                            right_x: rightMouthWidthCM,
-                            min_right_x: self.minRightMouthCorner_x,
-                            max_right_x: self.maxRightMouthCorner_x,
-                            left_y: leftMouthHeightCM,
-                            min_left_y: self.minLeftMouthCorner_y,
-                            max_left_y: self.maxLeftMouthCorner_y,
-                            right_y: rightMouthHeightCM,
-                            min_right_y: self.minRightMouthCorner_y,
-                            max_right_y: self.maxRightMouthCorner_y,
-                            area: insideMouthArea,
-                            max_area: self.maxDentalShow
-                        )
-                    case "Eye Closure":
-                        self.updateEyeSymmetryLabel(
-                            left_eye_height: leftEyeHeight,
-                            min_left_eye_height: self.minLeftEyeClosure,
-                            max_left_eye_height: self.maxLeftEye,
-                            right_eye_height: rightEyeHeight,
-                            min_right_eye_height: self.minRightEyeClosure,
-                            max_right_eye_height: self.maxRightEye
-                        )
-
-                    default:
-                        break
-                    }
+                    self.updateMouthLabel(
+                                left_x: leftMouthWidthCM,
+                                min_left_x: self.minLeftMouthCorner_x,
+                                max_left_x: self.maxLeftMouthCorner_x,
+                                right_x: rightMouthWidthCM,
+                                min_right_x: self.minRightMouthCorner_x,
+                                max_right_x: self.maxRightMouthCorner_x,
+                                left_y: leftMouthHeightCM,
+                                min_left_y: self.minLeftMouthCorner_y,
+                                max_left_y: self.maxLeftMouthCorner_y,
+                                right_y: rightMouthHeightCM,
+                                min_right_y: self.minRightMouthCorner_y,
+                                max_right_y: self.maxRightMouthCorner_y,
+                                area: insideMouthArea,
+                                min_area: self.minDentalShow,
+                                max_area: self.maxDentalShow
+                            )
+                            
+                            self.updateEyeLabel(
+                                left_eye_height: leftEyeHeight,
+                                min_left_eye_height: self.minLeftEyeClosure,
+                                max_left_eye_height: self.maxLeftEye,
+                                right_eye_height: rightEyeHeight,
+                                min_right_eye_height: self.minRightEyeClosure,
+                                max_right_eye_height: self.maxRightEye
+                            )
+//                    switch self.viewOption {
+//                    case "Smile":
+//                        self.updateSmileSymmetryLabel(
+//                            left_x: leftMouthWidthCM,
+//                            min_left_x: self.minLeftMouthCorner_x,
+//                            max_left_x: self.maxLeftMouthCorner_x,
+//                            right_x: rightMouthWidthCM,
+//                            min_right_x: self.minRightMouthCorner_x,
+//                            max_right_x: self.maxRightMouthCorner_x,
+//                            left_y: leftMouthHeightCM,
+//                            min_left_y: self.minLeftMouthCorner_y,
+//                            max_left_y: self.maxLeftMouthCorner_y,
+//                            right_y: rightMouthHeightCM,
+//                            min_right_y: self.minRightMouthCorner_y,
+//                            max_right_y: self.maxRightMouthCorner_y,
+//                            area: insideMouthArea,
+//                            max_area: self.maxDentalShow
+//                        )
+//                    case "Eye Closure":
+//                        self.updateEyeSymmetryLabel(
+//                            left_eye_height: leftEyeHeight,
+//                            min_left_eye_height: self.minLeftEyeClosure,
+//                            max_left_eye_height: self.maxLeftEye,
+//                            right_eye_height: rightEyeHeight,
+//                            min_right_eye_height: self.minRightEyeClosure,
+//                            max_right_eye_height: self.maxRightEye
+//                        )
+//
+//                    default:
+//                        break
+//                    }
                 }
             }
         }
@@ -849,7 +941,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
 //        _ = vertexArray.withUnsafeMutableBytes { vertexArrayBuffer in
 //            subdata.copyBytes(to: vertexArrayBuffer)
 //        }
-//        
+//
 //        // Create the vertex position
 //        let vertexPosition = SCNVector3(x: vertexArray[0], y: vertexArray[1], z: vertexArray[2])
 //        
@@ -891,7 +983,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
             }
             
             dotGeometry.firstMaterial?.diffuse.contents = color
-            dotGeometry.firstMaterial?.transparency = 0.7
+            dotGeometry.firstMaterial?.transparency = 1
             // Check if a dot node for this vertex already exists; update it or create a new one
 //            let dotNode: SCNNode
             if let existingDotNode = node.childNode(withName: dotName, recursively: false) {
@@ -1057,6 +1149,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
             self.symmetryLabel.text = "Values have been reset"
             self.symmetryLabel.sizeToFit() // Adjust the label size based on content
         }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            // Option A: Clear the text
+            self.symmetryLabel.text = ""
+            self.symmetryLabel.sizeToFit()
+            
+            // Option B: Alternatively, reset to default metrics or previous state
+            // self.symmetryLabel.text = "Default Metrics Here"
+            // self.symmetryLabel.sizeToFit()
+        }
     }
     
 //    @objc func resetMaxValues() {
@@ -1211,8 +1313,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
                              \t\tCurrent\tMin\tMax
             Left Lip Corner Width\t\(String(format: "%.1f", left_x)) cm\t\(String(format: "%.1f", min_left_x)) cm\t\(String(format: "%.1f", max_left_x)) cm
             Right Lip Corner Width\t\(String(format: "%.1f", right_x)) cm\t\(String(format: "%.1f", min_right_x)) cm\t\(String(format: "%.1f", max_right_x)) cm
-            Left Lip Corner Height\t\(String(format: "%.1f", left_y)) cm\t\(String(format: "%.1f", min_left_y)) cm\t\(String(format: "%.1f", max_left_y)) cm
-            Right Lip Corner Height\t\(String(format: "%.1f", right_y)) cm\t\(String(format: "%.1f", min_right_y)) cm\t\(String(format: "%.1f", max_right_y)) cm
+            Left Lip Corner Elevation\t\(String(format: "%.1f", left_y)) cm\t\(String(format: "%.1f", min_left_y)) cm\t\(String(format: "%.1f", max_left_y)) cm
+            Right Lip Corner Elevation\t\(String(format: "%.1f", right_y)) cm\t\(String(format: "%.1f", min_right_y)) cm\t\(String(format: "%.1f", max_right_y)) cm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1252,6 +1354,83 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIPickerViewDelegate,
         
         // Add semi-transparent black background
         symmetryLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+    }
+    
+    func updateMouthLabel(
+        left_x: Float, min_left_x: Float, max_left_x: Float,
+        right_x: Float, min_right_x: Float, max_right_x: Float,
+        left_y: Float, min_left_y: Float, max_left_y: Float,
+        right_y: Float, min_right_y: Float, max_right_y: Float,
+        area: Float, min_area: Float, max_area: Float
+    ) {
+        let paragraphStyle = NSMutableParagraphStyle()
+        
+        // Define tab stops at desired positions
+        paragraphStyle.tabStops = [
+            NSTextTab(textAlignment: .left, location: 150),
+            NSTextTab(textAlignment: .right, location: 300),
+            NSTextTab(textAlignment: .right, location: 450),
+            NSTextTab(textAlignment: .right, location: 600)
+        ]
+        paragraphStyle.defaultTabInterval = 150
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        // Create attributed string with tab stops
+        let attributedString = NSMutableAttributedString(
+            string: """
+            Mouth Metrics:
+            \t\tCurrent\tMin\tMax
+            Left Lip Corner Offset\t\(String(format: "%.1f", left_x)) cm\t\(String(format: "%.1f", min_left_x)) cm\t\(String(format: "%.1f", max_left_x)) cm
+            Right Lip Corner Offset\t\(String(format: "%.1f", right_x)) cm\t\(String(format: "%.1f", min_right_x)) cm\t\(String(format: "%.1f", max_right_x)) cm
+            Left Lip Corner Elevation\t\(String(format: "%.1f", left_y)) cm\t\(String(format: "%.1f", min_left_y)) cm\t\(String(format: "%.1f", max_left_y)) cm
+            Right Lip Corner Elevation\t\(String(format: "%.1f", right_y)) cm\t\(String(format: "%.1f", min_right_y)) cm\t\(String(format: "%.1f", max_right_y)) cm
+            Dental Show Area\t\t\(String(format: "%.0f", area)) cm²\t\(String(format: "%.0f", min_area)) cm²\t\(String(format: "%.0f", max_area)) cm²
+            """,
+            attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
+        )
+        
+        // Apply to mouthLabel
+        mouthLabel.attributedText = attributedString
+        mouthLabel.sizeToFit()
+    }
+
+    func updateEyeLabel(
+        left_eye_height: Float,
+        min_left_eye_height: Float,
+        max_left_eye_height: Float,
+        right_eye_height: Float,
+        min_right_eye_height: Float,
+        max_right_eye_height: Float
+    ) {
+        let paragraphStyle = NSMutableParagraphStyle()
+        
+        // Define tab stops at desired positions
+        paragraphStyle.tabStops = [
+            NSTextTab(textAlignment: .left, location: 150),
+            NSTextTab(textAlignment: .right, location: 300),
+            NSTextTab(textAlignment: .right, location: 450),
+            NSTextTab(textAlignment: .right, location: 600)
+        ]
+        paragraphStyle.defaultTabInterval = 150
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        // Create attributed string with tab stops
+        let attributedString = NSMutableAttributedString(
+            string: """
+            Eye Metrics:
+                             \t\tCurrent\tMin\tMax
+            Left Eye Height           \t\(String(format: "%.1f", left_eye_height)) cm\t\(String(format: "%.1f", min_left_eye_height)) cm\t\(String(format: "%.1f", max_left_eye_height)) cm
+            Right Eye Height          \t\(String(format: "%.1f", right_eye_height)) cm\t\(String(format: "%.1f", min_right_eye_height)) cm\t\(String(format: "%.1f", max_right_eye_height)) cm
+            """,
+            attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
+        )
+        
+        // Apply to eyeLabel
+        eyeLabel.attributedText = attributedString
+        eyeLabel.sizeToFit()
+        
+        // Ensure background color is set (if not already)
+        eyeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
     }
         
     @IBAction func toggleRecording(_ sender: UIButton) {

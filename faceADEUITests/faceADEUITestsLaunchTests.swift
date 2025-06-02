@@ -1,13 +1,13 @@
 //
-//  meFACEUITestsLaunchTests.swift
-//  meFACEUITests
+//  faceADEUITestsLaunchTests.swift
+//  faceADEUITests
 //
 //  Created by Katherine Guo on 4/23/24.
 //
 
 import XCTest
 
-final class meFACEUITestsLaunchTests: XCTestCase {
+final class faceADEUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
