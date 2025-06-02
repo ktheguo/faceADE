@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9D1684012C47186D000EEDB4 /* RecordsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D1684002C47186C000EEDB4 /* RecordsViewController.swift */; };
+		9D1684042C472988000EEDB4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9D31A65A2BD8889C0070C918 /* Main.storyboard */; };
 		9D31A6552BD8889C0070C918 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D31A6542BD8889C0070C918 /* AppDelegate.swift */; };
 		9D31A6572BD8889C0070C918 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D31A6562BD8889C0070C918 /* SceneDelegate.swift */; };
 		9D31A6592BD8889C0070C918 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D31A6582BD8889C0070C918 /* ViewController.swift */; };
@@ -36,6 +38,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9D1684002C47186C000EEDB4 /* RecordsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordsViewController.swift; sourceTree = "<group>"; };
 		9D31A6512BD8889C0070C918 /* meFACE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = meFACE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D31A6542BD8889C0070C918 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9D31A6562BD8889C0070C918 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -106,6 +109,7 @@
 				9D31A65D2BD8889E0070C918 /* Assets.xcassets */,
 				9D31A65F2BD8889E0070C918 /* LaunchScreen.storyboard */,
 				9D31A6622BD8889E0070C918 /* Info.plist */,
+				9D1684002C47186C000EEDB4 /* RecordsViewController.swift */,
 			);
 			path = meFACE;
 			sourceTree = "<group>";
@@ -234,6 +238,7 @@
 				9D31A65E2BD8889E0070C918 /* Assets.xcassets in Resources */,
 				9D31A6612BD8889E0070C918 /* Base in Resources */,
 				9D31A65C2BD8889C0070C918 /* Base in Resources */,
+				9D1684042C472988000EEDB4 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,6 +266,7 @@
 				9D31A6592BD8889C0070C918 /* ViewController.swift in Sources */,
 				9D31A6552BD8889C0070C918 /* AppDelegate.swift in Sources */,
 				9D31A6572BD8889C0070C918 /* SceneDelegate.swift in Sources */,
+				9D1684012C47186D000EEDB4 /* RecordsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,8 +448,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5V235X5JKH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = meFACE/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -469,8 +477,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5V235X5JKH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = meFACE/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
