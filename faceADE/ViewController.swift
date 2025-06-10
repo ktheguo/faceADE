@@ -683,12 +683,12 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //                    }
 //                }
                 // 188, 637
-                guard let leftMouthVertex = getVertexPosition(from: vertexData, at: 827, stride: vertexStride, offset: vertexOffset),
-                      let rightMouthVertex = getVertexPosition(from: vertexData, at: 397, stride: vertexStride, offset: vertexOffset),
-                      let leftEyeTopVertex = getVertexPosition(from: vertexData, at: 1094, stride: vertexStride, offset: vertexOffset),
-                      let leftEyeBottomVertex = getVertexPosition(from: vertexData, at: 1107, stride: vertexStride, offset: vertexOffset),
-                      let rightEyeTopVertex = getVertexPosition(from: vertexData, at: 1075, stride: vertexStride, offset: vertexOffset),
-                      let rightEyeBottomVertex = getVertexPosition(from: vertexData, at: 1063, stride: vertexStride, offset: vertexOffset) else { return }
+                guard let leftMouthVertex = getVertexPosition(from: vertexData, at: 825, stride: vertexStride, offset: vertexOffset),  // 827
+                      let rightMouthVertex = getVertexPosition(from: vertexData, at: 395, stride: vertexStride, offset: vertexOffset), // 397
+                      let leftEyeTopVertex = getVertexPosition(from: vertexData, at: 1094, stride: vertexStride, offset: vertexOffset), // 1094
+                      let leftEyeBottomVertex = getVertexPosition(from: vertexData, at: 1108, stride: vertexStride, offset: vertexOffset), // 1107
+                      let rightEyeTopVertex = getVertexPosition(from: vertexData, at: 1076, stride: vertexStride, offset: vertexOffset), //1075
+                      let rightEyeBottomVertex = getVertexPosition(from: vertexData, at: 1062, stride: vertexStride, offset: vertexOffset) else { return } // 1063
                 
                 var insideMouthNodes: [SCNVector3] = []
                for index in insideMouthIndices {
@@ -1311,14 +1311,14 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         let attributedString = NSMutableAttributedString(
             string: """
                              \t\tCurrent\tMin\tMax
-            Left Lip Corner Width\t\(String(format: "%.1f", left_x)) cm\t\(String(format: "%.1f", min_left_x)) cm\t\(String(format: "%.1f", max_left_x)) cm
-            Right Lip Corner Width\t\(String(format: "%.1f", right_x)) cm\t\(String(format: "%.1f", min_right_x)) cm\t\(String(format: "%.1f", max_right_x)) cm
-            Left Lip Corner Elevation\t\(String(format: "%.1f", left_y)) cm\t\(String(format: "%.1f", min_left_y)) cm\t\(String(format: "%.1f", max_left_y)) cm
-            Right Lip Corner Elevation\t\(String(format: "%.1f", right_y)) cm\t\(String(format: "%.1f", min_right_y)) cm\t\(String(format: "%.1f", max_right_y)) cm
+            Left Lip Corner Width\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
+            Right Lip Corner Width\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
+            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
+            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
-        // Dental Show Area\t\t\(String(format: "%.1f", area)) cm² \t\t\(String(format: "%.1f", max_area)) cm²
+        // Dental Show Area\t\t\(String(format: "%.2f", area)) cm² \t\t\(String(format: "%.2f", max_area)) cm²
         // Apply to label
         symmetryLabel.attributedText = attributedString
         symmetryLabel.sizeToFit()
@@ -1380,10 +1380,10 @@ class ViewController: UIViewController, ARSCNViewDelegate{
             string: """
             Mouth Metrics:
             \t\tCurrent\tMin\tMax
-            Left Lip Corner Offset\t\(String(format: "%.1f", left_x)) cm\t\(String(format: "%.1f", min_left_x)) cm\t\(String(format: "%.1f", max_left_x)) cm
-            Right Lip Corner Offset\t\(String(format: "%.1f", right_x)) cm\t\(String(format: "%.1f", min_right_x)) cm\t\(String(format: "%.1f", max_right_x)) cm
-            Left Lip Corner Elevation\t\(String(format: "%.1f", left_y)) cm\t\(String(format: "%.1f", min_left_y)) cm\t\(String(format: "%.1f", max_left_y)) cm
-            Right Lip Corner Elevation\t\(String(format: "%.1f", right_y)) cm\t\(String(format: "%.1f", min_right_y)) cm\t\(String(format: "%.1f", max_right_y)) cm
+            Left Lip Corner Offset\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
+            Right Lip Corner Offset\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
+            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
+            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
             Dental Show Area\t\t\(String(format: "%.0f", area)) cm²\t\(String(format: "%.0f", min_area)) cm²\t\(String(format: "%.0f", max_area)) cm²
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
@@ -1419,8 +1419,8 @@ class ViewController: UIViewController, ARSCNViewDelegate{
             string: """
             Eye Metrics:
                              \t\tCurrent\tMin\tMax
-            Left Eye Height           \t\(String(format: "%.1f", left_eye_height)) cm\t\(String(format: "%.1f", min_left_eye_height)) cm\t\(String(format: "%.1f", max_left_eye_height)) cm
-            Right Eye Height          \t\(String(format: "%.1f", right_eye_height)) cm\t\(String(format: "%.1f", min_right_eye_height)) cm\t\(String(format: "%.1f", max_right_eye_height)) cm
+            Left Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
+            Right Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
