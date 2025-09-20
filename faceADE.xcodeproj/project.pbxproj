@@ -52,6 +52,7 @@
 		9D31A6712BD8889E0070C918 /* faceADEUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = faceADEUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D31A6752BD8889E0070C918 /* faceADEUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = faceADEUITests.swift; sourceTree = "<group>"; };
 		9D31A6772BD8889E0070C918 /* faceADEUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = faceADEUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		DC00A4602E05E48D00AC3A7E /* ViewControllerWithSymScores.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerWithSymScores.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +106,7 @@
 				9D31A6542BD8889C0070C918 /* AppDelegate.swift */,
 				9D31A6562BD8889C0070C918 /* SceneDelegate.swift */,
 				9D31A6582BD8889C0070C918 /* ViewController.swift */,
+				DC00A4602E05E48D00AC3A7E /* ViewControllerWithSymScores.swift */,
 				9D31A65A2BD8889C0070C918 /* Main.storyboard */,
 				9D31A65D2BD8889E0070C918 /* Assets.xcassets */,
 				9D31A65F2BD8889E0070C918 /* LaunchScreen.storyboard */,
@@ -447,7 +449,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5V235X5JKH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = faceADE/Info.plist;
@@ -465,8 +467,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Katherine-Guo.faceADE";
+				MARKETING_VERSION = 8.0;
+				PRODUCT_BUNDLE_IDENTIFIER = faceADE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -484,7 +486,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5V235X5JKH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = faceADE/Info.plist;
@@ -502,8 +504,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Katherine-Guo.faceADE";
+				MARKETING_VERSION = 8.0;
+				PRODUCT_BUNDLE_IDENTIFIER = faceADE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

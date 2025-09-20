@@ -3,6 +3,7 @@
 //  faceADE
 //
 //  Created by Katherine Guo on 4/23/24.
+//  Edited by Anthony Newman 7/8/25
 //
 
 import UIKit
@@ -11,8 +12,20 @@ import AVFoundation
 import Photos
 import ReplayKit
 
+//for setting neutral expression value capture
+struct NeutralExpressionValues {
+    let leftDMEyeHeight:  Float
+    let rightDMEyeHeight:  Float
+    let leftDMEyeArea:  Float
+    let rightDMEyeArea:  Float
+    let leftDMLLMovement:  Float
+    let rightDMLLMovement:  Float
+    let leftDMMouthArea:  Float
+    let rightDMMouthArea:  Float
+}
 
-class ViewController: UIViewController, ARSCNViewDelegate{
+class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDelegate{
+    
 //    func numberOfComponents(in pickerView: UIPickerView) -> Int {
 //        return 1
 //    }
@@ -29,19 +42,213 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //        // Optionally, update the label immediately after selection
 //        // updateSymmetryLabel()
 //    }
-    
+ 
+    //for setting neutral expression
+    private var neutralExpression: NeutralExpressionValues?
     
     @IBOutlet weak var sceneView: ARSCNView!
+   
+    //creating switches for mesh and dots
+    @IBOutlet weak var meshSwitch: UISwitch!
+    @IBOutlet weak var dotsSwitch: UISwitch!
+    
+    @IBAction func meshSwitchChanged(_ sender: UISwitch) {
+        isMeshEnabled = sender.isOn
+        faceMeshNode?.isHidden = !sender.isOn
+    }
+
+    @IBAction func dotsSwitchChanged(_ sender: UISwitch) {
+        isDotsEnabled = sender.isOn
+        dotNodes.forEach { $0.isHidden = !sender.isOn }
+    }
+    
+    //Set Neutral Button
+    @IBAction func setNeutralPressed(_ sender: UIButton) {
+        // Grab the “current” properties
+        let values = NeutralExpressionValues (
+            leftDMEyeHeight: currentleftEyeHeight,
+            rightDMEyeHeight: currentrightEyeHeight,
+            leftDMEyeArea: currentinsideLeftEyeArea,
+            rightDMEyeArea: currentinsideRightEyeArea,
+            leftDMLLMovement: currentLeftBotLipMes,
+            rightDMLLMovement: currentRightBotLipMes,
+            leftDMMouthArea: currentLeftMouthArea,
+            rightDMMouthArea: currentRightMouthArea
+        )
+        // Store them
+        neutralExpression = values
+
+        // give user feedback
+        sender.setTitle("Neutral ✔︎", for: .normal)
+        
+        guard let window = view.window else {
+            print("⚠️ No key window to snapshot")
+            return
+        }
+        UIGraphicsBeginImageContextWithOptions(window.bounds.size, false, UIScreen.main.scale)
+        window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        let fullScreenshot = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        guard let image = fullScreenshot else {
+            print("❌ Failed to capture full screen")
+            return
+        }
+
+           // Request permission & save into Photos
+           PHPhotoLibrary.requestAuthorization { status in
+               guard status == .authorized else {
+                   print("📷 Photo library access denied")
+                   return
+               }
+               PHPhotoLibrary.shared().performChanges({
+                   PHAssetChangeRequest.creationRequestForAsset(from: image)
+               }) { success, error in
+                   if let error = error {
+                       print("❌ Error saving snapshot: \(error.localizedDescription)")
+                   } else {
+                       print("✅ Neutral expression snapshot saved!")
+                   }
+               }
+           }
+    }
+    
+    @IBOutlet weak var setNeutralButton: UIButton!
+
+   // screenshot button
+    @IBOutlet weak var screenshotButton: UIButton!
+    
+    @IBAction func screenshotPressed(_sender:UIButton) {
+        // 1) Capture the full screen
+           guard let window = view.window else {
+               print("⚠️ No key window to snapshot")
+               return
+           }
+           UIGraphicsBeginImageContextWithOptions(window.bounds.size, false, UIScreen.main.scale)
+           window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+           let fullImage = UIGraphicsGetImageFromCurrentImageContext()
+           UIGraphicsEndImageContext()
+
+           guard let image = fullImage else {
+               print("❌ Failed to capture screenshot")
+               return
+           }
+
+           // Ask for permission and save to Photos
+           PHPhotoLibrary.requestAuthorization { status in
+               guard status == .authorized else {
+                   print("📷 Photo library access denied")
+                   return
+               }
+               PHPhotoLibrary.shared().performChanges({
+                   PHAssetChangeRequest.creationRequestForAsset(from: image)
+               }) { success, error in
+                   if let error = error {
+                       print("❌ Error saving screenshot: \(error.localizedDescription)")
+                   } else {
+                       print("✅ Screenshot saved to Photos!")
+                   }
+               }
+           }
+    }
+    @IBAction func screenshotPressed(_ sender: Any) {
+    }
+   
+    //Fields for Last Name, First Name, DOB, MRN
+    @IBOutlet weak var lastNameField:  UITextField!
+    @IBAction func lastname(_ sender: Any) {
+    }
+    @IBOutlet weak var firstNameField: UITextField!
+    @IBAction func firstname(_ sender: Any) {
+    }
+    @IBOutlet weak var dobField:       UITextField!
+    @IBAction func dob(_ sender: Any) {
+    }
+    @IBOutlet weak var mrnField:       UITextField!
+    @IBAction func mrn(_ sender: Any) {
+    }
+    
+    //Clear Button
+    @IBOutlet weak var clearButton: UIButton!
+    @IBAction func clear(_ sender: Any) {
+    }
+    
+    @IBAction func clearPressed(_ sender: UIButton) {
+        // 1) Clear each text field
+            lastNameField.text  = ""
+            firstNameField.text = ""
+            dobField.text       = ""
+            mrnField.text       = ""
+
+            // 2) (Optional) return placeholders back
+            lastNameField.placeholder  = "Enter last name"
+            firstNameField.placeholder = "Enter first name"
+            dobField.placeholder       = "MM/DD/YYYY"
+            mrnField.placeholder       = "Enter MRN"
+
+            // 3) (Optional) dismiss the keyboard if it’s up
+            view.endEditing(true)
+    }
+    
     var faceGeometry: ARSCNFaceGeometry?
     var symmetryLabel: UILabel!
     var mouthLabel: UILabel!
     var eyeLabel: UILabel!
+    var dmLabel: UILabel!
+    private var faceMeshNode: SCNNode?
+    private var dotNodes: [SCNNode] = []
+    private var isMeshEnabled = true
+    private var isDotsEnabled = true
+
+    //for csv
+    private var csvFileURL: URL?
+    private var csvFileHandle: FileHandle?
+    private var dataTimer: Timer?
+    private var secondsElapsed = 0
+    
+    // for landmarks CSV for ML (all XYZ coords for 1220 vertices)
+    private var landmarkCsvFileURL: URL?
+    private var landmarkFileHandle: FileHandle?
+    private var frameCounter = 0
+    
+    //variables for CSV
+    private var currentinsideMouthArea: Float  = 0
+    private var currentCommissureWidth: Float = 0
+    private var currentLeftMouthVertical: Float       = 0
+    private var currentRightMouthVertical: Float       = 0
+    private var currentRightTopLipMes: Float       = 0
+    private var currentLeftTopLipMes: Float       = 0
+    private var currentRightBotLipMes: Float       = 0
+    private var currentLeftBotLipMes: Float       = 0
+    private var currentleftEyeHeight: Float       = 0
+    private var currentrightEyeHeight: Float       = 0
+    private var currentinsideRightEyeArea: Float    = 0
+    private var currentinsideLeftEyeArea: Float    = 0
+    private var currentRightEyeWidth: Float    = 0
+    private var currentLeftEyeWidth: Float    = 0
+    private var currentLeftMouthArea: Float = 0
+    private var currentRightMouthArea: Float = 0
+    
+    //variables for CSV but dynamic movement
+    private var currentpctDMLeftEyeHeight: Float = 0
+    private var currentpctDMRightEyeHeight: Float = 0
+    private var currentpctDMLeftEyeArea: Float = 0
+    private var currentpctDMRightEyeArea: Float = 0
+    private var currentpctDMLeftLLMovement: Float = 0
+    private var currentpctDMRightLLMovement: Float = 0
+    private var currentpctDMLeftMouthArea: Float = 0
+    private var currentpctDMRightMouthArea: Float = 0
+    
     
     var userId: String = "katherine" // Replace this with actual user ID logic
 //    var maxHeightDifference: Float = 0.0
 //    var maxWidthDifference: Float = 0.0
     var maxDentalShow: Float = 0.0
     var minDentalShow: Float = .greatestFiniteMagnitude
+    var maxRightMouthArea: Float = 0.0
+    var minRightMouthArea: Float = .greatestFiniteMagnitude
+    var maxLeftMouthArea: Float = 0.0
+    var minLeftMouthArea: Float = .greatestFiniteMagnitude
     var minLeftMouthCorner_x: Float = .greatestFiniteMagnitude
     var maxLeftMouthCorner_x: Float = 0.0
     var minLeftMouthCorner_y: Float = .greatestFiniteMagnitude
@@ -50,6 +257,32 @@ class ViewController: UIViewController, ARSCNViewDelegate{
     var maxRightMouthCorner_x: Float = 0.0
     var minRightMouthCorner_y: Float = .greatestFiniteMagnitude
     var maxRightMouthCorner_y: Float = 0.0
+    var minCommissureWidth: Float = .greatestFiniteMagnitude
+    var maxCommissureWidth: Float = 0.0
+    var minLeftMouthVertical: Float = .greatestFiniteMagnitude
+    var maxLeftMouthVertical: Float = 0.0
+    var minRightMouthVertical: Float = .greatestFiniteMagnitude
+    var maxRightMouthVertical: Float = 0.0
+    var minLeftCommPosLowLip: Float = .greatestFiniteMagnitude
+    var maxLeftCommPosLowLip: Float = 0.0
+    var minRightCommPosLowLip: Float = .greatestFiniteMagnitude
+    var maxRightCommPosLowLip: Float = 0.0
+    var minFPsymComLowLip: Float = .greatestFiniteMagnitude
+    var maxFPsymComLowLip: Float = 0.0
+    var minFPsymMouthVertical: Float = .greatestFiniteMagnitude
+    var maxFPsymMouthVertical: Float = 0.0
+    var minNPsymComLowLip: Float = .greatestFiniteMagnitude
+    var maxNPsymComLowLip: Float = 0.0
+    var minNPsymMouthVertical: Float = .greatestFiniteMagnitude
+    var maxNPsymMouthVertical: Float = 0.0
+    var minRightTopLipMes: Float = .greatestFiniteMagnitude
+    var maxRightTopLipMes: Float = 0.0
+    var minLeftTopLipMes: Float = .greatestFiniteMagnitude
+    var maxLeftTopLipMes: Float = 0.0
+    var minRightBotLipMes: Float = .greatestFiniteMagnitude
+    var maxRightBotLipMes: Float = 0.0
+    var minLeftBotLipMes: Float = .greatestFiniteMagnitude
+    var maxLeftBotLipMes: Float = 0.0
     
     var chinPosition: SCNVector3?
 
@@ -61,8 +294,61 @@ class ViewController: UIViewController, ARSCNViewDelegate{
     var minRightEyeClosure: Float = .greatestFiniteMagnitude
     var maxLeftEye: Float = 0.0
     var maxRightEye: Float = 0.0
+    var minLeftEyeArea: Float = .greatestFiniteMagnitude
+    var maxLeftEyeArea: Float = 0.0
+    var minRightEyeArea: Float = .greatestFiniteMagnitude
+    var maxRightEyeArea: Float = 0.0
+    var minFPsymEyeHeight: Float = .greatestFiniteMagnitude
+    var maxFPsymEyeHeight: Float = 0.0
+    var minNPsymEyeHeight: Float = .greatestFiniteMagnitude
+    var maxNPsymEyeHeight: Float = 0.0
+    var minRightEyeWidth: Float = .greatestFiniteMagnitude
+    var maxRightEyeWidth: Float = 0.0
+    var minLeftEyeWidth: Float = .greatestFiniteMagnitude
+    var maxLeftEyeWidth: Float = 0.0
     
-//    var records: [FaceRecord] = []
+    
+    func makeLocalQuadNodeSCN(_ pts: [SCNVector3]) -> SCNNode {
+        // Create a vertex source from the list of SCNVector3
+        let source = SCNGeometrySource(vertices: pts)
+        
+        // Build indices for a fan‐triangulation: (0,1,2), (0,2,3), …
+        var indices = [Int16]()
+        for i in 1..<pts.count-1 {
+            indices += [0, Int16(i), Int16(i+1)]
+        }
+        let data = Data(bytes: indices,
+                        count: indices.count * MemoryLayout<Int16>.size)
+        let element = SCNGeometryElement(
+            data:          data,
+            primitiveType: .triangles,
+            primitiveCount: indices.count/3,
+            bytesPerIndex: MemoryLayout<Int16>.size
+        )
+        
+        let geo = SCNGeometry(sources: [source], elements: [element])
+        geo.firstMaterial?.diffuse.contents  = UIColor.blue.withAlphaComponent(0.4)
+        geo.firstMaterial?.lightingModel     = .constant
+        
+        return SCNNode(geometry: geo)
+    }
+
+    func addSpheresSCN(_ points: [SCNVector3], to parent: SCNNode) {
+        // Remove old markers
+        parent.childNode(withName: "markers", recursively: false)?.removeFromParentNode()
+        let container = SCNNode()
+        container.name = "markers"
+        
+        for p in points {
+            let sphere = SCNSphere(radius: 0.02)
+            sphere.firstMaterial?.diffuse.contents = UIColor.red
+            let sNode = SCNNode(geometry: sphere)
+            sNode.position = p
+            container.addChildNode(sNode)
+        }
+        parent.addChildNode(container)
+    }
+
 
     
     var resetButton: UIButton!
@@ -108,41 +394,21 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 
         // Do any additional setup after loading the view.
         
-        
-        // Initialize the ARSCNView
-//        sceneView = ARSCNView(frame: self.view.frame)
-//        self.view.addSubview(sceneView)
-        
-        // Set the sceneView's delegate
         sceneView.delegate = self
         
-        // Optional: Show statistics such as fps and timing information
-//        sceneView.showsStatistics = true
+        meshSwitch.isOn = isMeshEnabled
+        dotsSwitch.isOn = isDotsEnabled
         
-        //        // Create and add a scene to the view
-        //        sceneView.scene = SCNScene()
-        //
-        //        if let device = sceneView.device {
-        //            faceGeometry = ARSCNFaceGeometry(device: device)
-        //        }
+       
         // Create the ARSCNFaceGeometry
         if let device = sceneView.device, let geom = ARSCNFaceGeometry(device: device) {
             faceGeometry = geom
             if let material = faceGeometry?.firstMaterial {
                 material.diffuse.contents = UIColor.clear
                 material.transparency = 0
-                material.fillMode = .lines // Optional: for a wireframe look
+                material.fillMode = .lines
             }
         }
-//        sceneView.translatesAutoresizingMaskIntoConstraints = false
-//                NSLayoutConstraint.activate([
-//                    sceneView.topAnchor.constraint(equalTo: view.topAnchor),
-//                    sceneView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-//                    sceneView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-//                    sceneView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -50)
-//                ])
-        
-        
 
         
         setupARSession()
@@ -228,7 +494,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //        recordingButton.tag = 100 // Use a tag to identify the button later
 //        recordingButton.translatesAutoresizingMaskIntoConstraints = false
 //        containerView.addSubview(recordingButton)
-//        
+//
 //        let resetButton = UIButton(type: .system)
 //        resetButton.setTitle("Reset Values", for: .normal)
 //        resetButton.setTitleColor(.white, for: .normal)
@@ -236,7 +502,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //        resetButton.translatesAutoresizingMaskIntoConstraints = false
 //        resetButton.addTarget(self, action: #selector(resetMaxValues), for: .touchUpInside)
 //        containerView.addSubview(resetButton)
-//        
+//
 //        let saveRestingButton = UIButton(type: .system)
 //        saveRestingButton.setTitle("Save Resting Values", for: .normal)
 //        saveRestingButton.setTitleColor(.white, for: .normal)
@@ -259,23 +525,23 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //            recordingButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
 //            recordingButton.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
 //            recordingButton.heightAnchor.constraint(equalToConstant: 40),
-//            
+//
 //            resetButton.leadingAnchor.constraint(equalTo: recordingButton.trailingAnchor, constant: 20),
 //            resetButton.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
 //            resetButton.heightAnchor.constraint(equalToConstant: 40),
-//            
+//
 //            saveRestingButton.leadingAnchor.constraint(equalTo: resetButton.trailingAnchor, constant: 20),
 //            saveRestingButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
 //            saveRestingButton.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
 //            saveRestingButton.heightAnchor.constraint(equalToConstant: 40)
 //        ])
-//        
+//
 //        // Equal width constraint
 //        NSLayoutConstraint.activate([
 //            recordingButton.widthAnchor.constraint(equalTo: resetButton.widthAnchor),
 //            resetButton.widthAnchor.constraint(equalTo: saveRestingButton.widthAnchor)
 //        ])
-//        
+//
         // Initialize and add symmetryLabel
         symmetryLabel = UILabel()
         symmetryLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -295,43 +561,50 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         
         // Initialize and configure mouthLabel
         mouthLabel = UILabel()
-        mouthLabel.translatesAutoresizingMaskIntoConstraints = false
+        mouthLabel.translatesAutoresizingMaskIntoConstraints = true
         mouthLabel.textColor = .white
         mouthLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         mouthLabel.textAlignment = .left
         mouthLabel.numberOfLines = 0 // Allow multiple lines
-        mouthLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        mouthLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         
         // Initialize and configure eyeLabel
         eyeLabel = UILabel()
-        eyeLabel.translatesAutoresizingMaskIntoConstraints = false
+        eyeLabel.translatesAutoresizingMaskIntoConstraints = true
         eyeLabel.textColor = .white
         eyeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         eyeLabel.textAlignment = .left
         eyeLabel.numberOfLines = 0 // Allow multiple lines
-        eyeLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        eyeLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         
-        // Create a vertical stack view to hold both labels
-        let stackView = UIStackView(arrangedSubviews: [mouthLabel, eyeLabel])
-        stackView.axis = .vertical
-        stackView.spacing = 10
-        stackView.alignment = .fill
-        stackView.distribution = .fill// Equally
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(stackView)
+        // Initialize and configure dmLabel (for dynamic movement scores)
+        dmLabel = UILabel()
+        dmLabel.translatesAutoresizingMaskIntoConstraints = true
+        dmLabel.textColor = .white
+        dmLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        dmLabel.textAlignment = .center
+        dmLabel.numberOfLines = 0 // Allow multiple lines
+        dmLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         
-        // Add constraints to stackView
-//        NSLayoutConstraint.activate([
-//            stackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-//            stackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100),
-//            stackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
-//            stackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
-//        ])
+        // a) horizontal stack for the top two
+        let topRow = UIStackView(arrangedSubviews: [mouthLabel, eyeLabel])
+        topRow.axis         = .horizontal
+        topRow.spacing      = 8
+        topRow.distribution = .fillEqually
+
+        // b) vertical stack that contains that row above + the dmLabel
+        let container = UIStackView(arrangedSubviews: [topRow, dmLabel])
+        container.axis         = .vertical
+        container.spacing      = 12
+        container.alignment    = .center
+        container.distribution = .fillProportionally
+        container.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(container)
+        
         NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-            stackView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 20), // Changed from bottom to top
-            stackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
-            stackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
+          container.topAnchor.constraint(    equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+          container.leadingAnchor.constraint(equalTo: view.leadingAnchor,                    constant: 20),
+          container.trailingAnchor.constraint(equalTo: view.trailingAnchor,                   constant: -20),
         ])
             
         
@@ -341,14 +614,14 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //        pickerView.delegate = self
 //        pickerView.dataSource = self
 //        self.view.addSubview(pickerView)
-//        
+//
 //        // Constraints for pickerView
 //        NSLayoutConstraint.activate([
 //                pickerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 10),
 //                pickerView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
 //                pickerView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
 //            ])
-//        
+//
 //        let saveButton = UIButton(type: .system)
 //        saveButton.setTitle("Save Record", for: .normal)
 //        saveButton.addTarget(self, action: #selector(saveRecord), for: .touchUpInside)
@@ -372,7 +645,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //    @objc func showRecords() {
 //           performSegue(withIdentifier: "showRecords", sender: self)
 //       }
-//       
+//
 //       override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 //           if segue.identifier == "showRecords",
 //              let destinationVC = segue.destination as? RecordsViewController {
@@ -406,41 +679,43 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         sceneView.session.pause()
     }
     
-    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor,
-              let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!) else { return }
-        
-        // Set material properties
-        let material = faceGeometry.firstMaterial!
-        material.transparency = 0.25
-        material.diffuse.contents = UIColor.white // Set a visible color to test visibility
-        material.fillMode = .lines // Wireframe mode
-        
-        // Adjust lighting to enhance visibility
-        //        material.lightingModel = .constant // Simplifies the lighting on the face mesh
-        //        material.isDoubleSided = true // Ensures the mesh is visible from inside and outside
-        
-        let faceNode = SCNNode(geometry: faceGeometry)
-        node.addChildNode(faceNode)
-        
-        // Update the geometry immediately after creating the node
+    func renderer(_ renderer: SCNSceneRenderer,
+                  didAdd node: SCNNode,
+                  for anchor: ARAnchor) {
+        guard let faceAnchor   = anchor as? ARFaceAnchor,
+              let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!)
+        else { return }
+
+        let m = faceGeometry.firstMaterial!
+        m.transparency    = 0.50 //to adjust mesh visibility
+        m.diffuse.contents = UIColor.white
+        m.fillMode        = .lines
+
+        let meshNode = SCNNode(geometry: faceGeometry)
+        node.addChildNode(meshNode)
+
+        self.faceMeshNode  = meshNode
+        meshNode.isHidden  = !isMeshEnabled
+
         faceGeometry.update(from: faceAnchor.geometry)
     }
+    
+    
     
 //    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
 //        guard let faceAnchor = anchor as? ARFaceAnchor,
 //              let faceGeometry = node.childNodes.first?.geometry as? ARSCNFaceGeometry else { return }
-//        
+//
 //        faceGeometry.update(from: faceAnchor.geometry)
-//        
+//
 ////        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
-//        
+//
 //        // Extract the vertex source data
 //        if let vertexSource = faceGeometry.sources.first(where: { $0.semantic == .vertex }) {
 //            let vertexData = vertexSource.data
 //            let vertexStride = vertexSource.dataStride
 //            let vertexOffset = vertexSource.dataOffset
-//            
+//
 ////            xData, at: 1094, stride: vertexStride, offset: vertexOffset),
 ////            let leftEyeBottomVertex = getVertexPosition(from: vertexData, at: 1107, stride: vertexStride, offset: vertexOffset),
 ////            let rightEyeTopVertex = getVertexPosition(from: vertexData, at: 1075, stride: vertexStride, offset: vertexOffset),
@@ -448,7 +723,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //            let mouth_indices = [249, 684, 188, 637]
 ////            let inside_mouth_indices = [249, 393, 250, 251, 252, 253, 254, 255, 256, 24, 691, 690, 689, 688, 687, 686, 685, 823, 684, 834, 740, 683, 682, 710, 725, 709, 700, 25, 265, 274, 290, 275, 247, 248, 305, 404]
 //            let inside_mouth_indices = [249, 250, 252, 254, 256, 691, 689, 687, 685, 684, 740, 682, 725, 700, 274, 290, 247, 305]
-//            
+//
 //            let eye_indices = [1107, 1094, 1075, 1063]
 ////            for i in mouth_indices{
 ////                placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .blue)
@@ -471,24 +746,24 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //                            self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .blue)
 //                        }
 //                    }
-//            
+//
 //            guard let leftMouthVertex = getVertexPosition(from: vertexData, at: 249, stride: vertexStride, offset: vertexOffset),
 //                  let rightMouthVertex = getVertexPosition(from: vertexData, at: 684, stride: vertexStride, offset: vertexOffset),
 //                  let leftEyeTopVertex = getVertexPosition(from: vertexData, at: 1094, stride: vertexStride, offset: vertexOffset),
 //                  let leftEyeBottomVertex = getVertexPosition(from: vertexData, at: 1107, stride: vertexStride, offset: vertexOffset),
 //                  let rightEyeTopVertex = getVertexPosition(from: vertexData, at: 1075, stride: vertexStride, offset: vertexOffset),
 //                  let rightEyeBottomVertex = getVertexPosition(from: vertexData, at: 1063, stride: vertexStride, offset: vertexOffset) else { return }
-//            
+//
 //            // Convert the y-coordinates to centimeters
 //            let leftMouthHeightCM = leftMouthVertex.y * 100
 //            let rightMouthHeightCM = rightMouthVertex.y * 100
-//            
+//
 //            // Convert the x-coordinates to centimeters
 //            let leftMouthWidthCM = abs(leftMouthVertex.x * 100)
 //            let rightMouthWidthCM = abs(rightMouthVertex.x * 100)
-//            
+//
 //            var inside_mouth_nodes: [SCNVector3] = []
-//                
+//
 //            for index in inside_mouth_indices {
 //                if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
 //                    inside_mouth_nodes.append(position)
@@ -496,31 +771,31 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //            }
 ////            let insideMouthArea = calculatePolygonArea(vertices: inside_mouth_nodes) * 10000
 ////            print(insideMouthArea)
-//            
+//
 //            // Calculate the height difference
 //            let heightDifference = abs(leftMouthHeightCM - rightMouthHeightCM)
 //            currHeightDifference = heightDifference
-//            
+//
 //            // Calculate the width difference
 //            let widthDifference = abs(leftMouthWidthCM - rightMouthWidthCM)
 //            currWidthDifference = widthDifference
-//            
+//
 //            // Update the label with the height difference
 //            //                DispatchQueue.main.async {
 //            //                    self.symmetryLabel.text = String(format: "Smile Height Difference: %.2f cm", heightDifference)
 //            //                    self.xLabel.text = String(format: "Smile Width Difference: %.2f cm", widthDifference)
 //            //                }
-//            
+//
 //            // Update maximum height and width differences
 //            maxHeightDifference = max(maxHeightDifference, heightDifference)
 //            maxWidthDifference = max(maxWidthDifference, widthDifference)
-//            
+//
 //            let leftEyeHeight = abs(leftEyeTopVertex.y - leftEyeBottomVertex.y) * 100
 //            let rightEyeHeight = abs(rightEyeTopVertex.y - rightEyeBottomVertex.y) * 100
-//            
+//
 //            minLeftEyeClosure = min(minLeftEyeClosure, leftEyeHeight)
 //            minRightEyeClosure = min(minRightEyeClosure, rightEyeHeight)
-//            
+//
 //            saveMinEyeClosure(minLeft: minLeftEyeClosure, minRight: minRightEyeClosure)
 //
 //            // Update the label with the current and maximum differences
@@ -556,8 +831,8 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //                    break
 //                }
 //            }
-//        
-//        
+//
+//
 //        //        // Dispatch UI updates on the main thread
 //        //        DispatchQueue.main.async {
 //        //            self.updateSymmetryLabel(distance)
@@ -629,29 +904,115 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
             guard let faceAnchor = anchor as? ARFaceAnchor,
                   let faceGeometry = node.childNodes.first?.geometry as? ARSCNFaceGeometry else { return }
+            
+            //  append one row of all 1220 (x,y,z) (for machine learning (landmarks) CSV)
+               if let lmHandle = landmarkFileHandle {
+                   frameCounter += 1
+                   let verts = faceAnchor.geometry.vertices  // [SIMD3<Float>], count = 1220
+                   var line = "\(frameCounter)"
+                   for v in verts {
+                       line += ",\(v.x),\(v.y),\(v.z)"
+                   }
+                   line += "\n"
+                   if let data = line.data(using: .utf8) {
+                       lmHandle.write(data)
+                   }
+               }
 
             self.updateFaceGeometry(faceAnchor: faceAnchor, faceGeometry: faceGeometry, node: node)
         }
         func updateFaceGeometry(faceAnchor: ARFaceAnchor, faceGeometry: ARSCNFaceGeometry, node: SCNNode) {
             faceGeometry.update(from: faceAnchor.geometry)
+            let vertsfornose = faceAnchor.geometry.vertices
+            
             
             if let vertexSource = faceGeometry.sources.first(where: { $0.semantic == .vertex }) {
                 let vertexData = vertexSource.data
                 let vertexStride = vertexSource.dataStride
                 let vertexOffset = vertexSource.dataOffset
                 
+        //test for left right mouth area modifications
+                
+                //defining noseTip and noseBridge
+                let noseTip    = vertsfornose[9]
+                let noseBridge = vertsfornose[15]
+                
+                //Creating plane from noseTip and noseBridge
+                //  compute “ridge” vector pointing from tip → bridge
+                   let ridgeVector = simd_normalize(noseBridge - noseTip)
+
+                   // choosing face-down direction (negative Y in ARKit face-local)
+                   let down = simd_float3(0, -1, 0)
+
+                   // plane normal = cross(ridge, down) gives a vector pointing to one side
+                   //     (and is perpendicular to the sagittal plane)
+                   let planeNormal = simd_normalize(simd_cross(ridgeVector, down))
+                
+                
 //                let mouthIndices = [638, 189] // , 188, 637]
-                let mouthIndices = [397, 827] //  [172, 621] // [190, 639]
-                let eyeIndices = [1107, 1094, 1075, 1063]
-                let insideMouthIndices =  [249, 393, 250, 251, 252, 253, 254, 255, 256, 24, 691, 690, 689, 688, 687, 686, 685, 823, 684, 834, 740, 683, 682, 710, 725, 709, 700, 25, 265, 274, 290, 275, 247, 248, 305, 404]
-                for i in mouthIndices {
-                    self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+                let mouthIndices = [190, 639, 290, 725] //  [172, 621] // [190, 639]
+                let midlineIndices = [16, 8, 22] //midline (used to be eye)
+                let lowerlipIndices = [25]
+                //replace above with 25 and then make it white
+                //lip outline for test values: 21,28,541,543,545,557,556,553,635,826,92,94,96,108,107,104,186,396,697,706,722,713,571,569,566,837,262,271,287,278,122,120,117,407
+                let righteyeIndices = [1081, 1082, 1083, 1084, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080]
+                let lefteyeIndices = [1089, 1088, 1087, 1086, 1085, 1108, 1107, 1106, 1105, 1104, 1103, 1102, 1101, 1100, 1099, 1098, 1097, 1096, 1095, 1094, 1093, 1092, 1091, 1090]
+                let chinIndices = [984,983] // 984 and 983 for vertical to lower lip
+                let insideMouthIndices =  [24, 256, 255, 254, 253, 252, 251, 250, 393, 249, 404, 305, 248, 247, 275, 290, 274, 265, 25, 700, 709, 725, 710, 682, 683, 740, 834, 684, 823, 685, 686, 687, 688, 689, 690, 691]
+                // 24,256, 255, 254, 253, 252, 251, 250, 393, 249, 404, 305, 248, 247, 275, 290, 274, 265, 25, 700, 709, 725, 720, 682, 683, 740, 834, 684, 823, 685, 686, 687, 688, 689, 690, 691
+                let leftMouthIndices = [24,256, 255, 254, 253, 252, 251, 250, 393, 249, 404, 305, 248, 247, 275, 290, 274, 265, 25]
+                let rightMouthIndices = [24, 691, 690, 689, 688, 687, 686, 685, 823, 684, 834, 740, 683, 682, 710, 725, 709, 700, 25]
+                
+                // 1) Compute centroid (for sorting for mouth areas)
+                let allVerts = insideMouthIndices.map { vertsfornose[$0] }
+                let centroidSimd = allVerts.reduce(simd_float3(0,0,0), +)
+                                  / Float(insideMouthIndices.count)
+                let centroid = SCNVector3(centroidSimd.x,
+                                          centroidSimd.y,
+                                          centroidSimd.z)
+
+                // 2) Identify two midline landmarks
+                let dotPairs = insideMouthIndices.map { idx in
+                  let p = vertsfornose[idx]
+                  let d = simd_dot(planeNormal, p - noseTip)
+                  return (idx: idx, d: d)
                 }
-                for i in eyeIndices {
-                    self.placeDotOnVertex(at: i, with: vertexData, stride: vertexStride, offset: vertexOffset, on: node, color: .white)
+                let mids = dotPairs
+                  .sorted { abs($0.d) < abs($1.d) }
+                  .prefix(2)
+                  .map { $0.idx }
+
+                // 3) Half-space filter & include the mids
+                var rightIndices = insideMouthIndices.filter { idx in
+                  let d = simd_dot(planeNormal, vertsfornose[idx] - noseTip)
+                  return d <= 0 || mids.contains(idx)
+                }
+                var leftIndices  = insideMouthIndices.filter { idx in
+                  let d = simd_dot(planeNormal, vertsfornose[idx] - noseTip)
+                  return d >= 0 || mids.contains(idx)
+                }
+
+                // 4) Sort each side _around_ the centroid (so it’s a proper loop)
+                func sortAroundCentroid(_ idxs: [Int]) -> [Int] {
+                  return idxs.sorted { iA, iB in
+                    let a = vertsfornose[iA], b = vertsfornose[iB]
+                    let θa = atan2(a.y - centroidSimd.y, a.x - centroidSimd.x)
+                    let θb = atan2(b.y - centroidSimd.y, b.x - centroidSimd.x)
+                    return θa < θb
+                  }
+                }
+                rightIndices = sortAroundCentroid(rightIndices)
+                leftIndices  = sortAroundCentroid(leftIndices)
+
+                // 5) Map to SCNVector3 and measure
+                let rightSCN = rightIndices.map { i in
+                  let v = vertsfornose[i]; return SCNVector3(v.x, v.y, v.z)
+                }
+                let leftSCN  = leftIndices.map { i in
+                  let v = vertsfornose[i]; return SCNVector3(v.x, v.y, v.z)
                 }
                 
-                // Retrieve the chin vertex position
+                // Retrieve chin vertex position
                 guard let chinVertex = getVertexPosition(from: vertexData, at: 1047, stride: vertexStride, offset: vertexOffset) else {
                     print("Chin vertex not found")
                     return
@@ -683,25 +1044,122 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //                    }
 //                }
                 // 188, 637
-                guard let leftMouthVertex = getVertexPosition(from: vertexData, at: 825, stride: vertexStride, offset: vertexOffset),  // 827
-                      let rightMouthVertex = getVertexPosition(from: vertexData, at: 395, stride: vertexStride, offset: vertexOffset), // 397
+                guard let rightMouthVertex = getVertexPosition(from: vertexData, at: 639, stride: vertexStride, offset: vertexOffset),  // 827
+                      let leftMouthVertex = getVertexPosition(from: vertexData, at: 190, stride: vertexStride, offset: vertexOffset), // 397
+                      let leftLowerLipVertex = getVertexPosition(from: vertexData, at: 290, stride: vertexStride, offset: vertexOffset),
+                      let rightLowerLipVertex = getVertexPosition(from: vertexData, at: 725, stride: vertexStride, offset: vertexOffset),
+                      let leftChinVertex = getVertexPosition(from: vertexData, at: 984, stride: vertexStride, offset: vertexOffset),
+                      let rightChinVertex = getVertexPosition(from: vertexData, at: 983, stride: vertexStride, offset: vertexOffset),
+                      let lowerLipMidlineVertex = getVertexPosition(from: vertexData, at: 25, stride: vertexStride, offset: vertexOffset), //lowerlipvertex for Commisure Position to Lower Lip Measurement
+                      let nosebridgeVertex = getVertexPosition(from: vertexData, at: 15, stride: vertexStride, offset: vertexOffset), //nose bridge vertex for x-axis of lip movement
+                      let midchinVertex = getVertexPosition(from: vertexData, at: 35, stride: vertexStride, offset: vertexOffset), // chin midline
+                      let midlineTopVertex = getVertexPosition(from: vertexData, at: 21, stride: vertexStride, offset: vertexOffset), //MidLip Top
+                      let mindlineBottomVertex = getVertexPosition(from: vertexData, at: 28, stride: vertexStride, offset: vertexOffset), //Midlip Bottom
+                      let R1TLVertex = getVertexPosition(from: vertexData, at: 541, stride: vertexStride, offset: vertexOffset), //Left 1 Top Lip
+                      let R2TLVertex = getVertexPosition(from: vertexData, at: 543, stride: vertexStride, offset: vertexOffset), //Left 2 Top Lip
+                      let R3TLVertex = getVertexPosition(from: vertexData, at: 545, stride: vertexStride, offset: vertexOffset), //Left 3 Top Lip
+                      let R4TLVertex = getVertexPosition(from: vertexData, at: 557, stride: vertexStride, offset: vertexOffset), //Left 4 Top Lip
+                      let R5TLVertex = getVertexPosition(from: vertexData, at: 556, stride: vertexStride, offset: vertexOffset), //Left 5 Top Lip
+                      let R6TLVertex = getVertexPosition(from: vertexData, at: 553, stride: vertexStride, offset: vertexOffset), //Left 6 Top Lip
+                      let R7TLVertex = getVertexPosition(from: vertexData, at: 635, stride: vertexStride, offset: vertexOffset), //Left 7 Top Lip
+                      let R8TLVertex = getVertexPosition(from: vertexData, at: 826, stride: vertexStride, offset: vertexOffset), //Left 8 Top Lip
+                      let L1TLVertex = getVertexPosition(from: vertexData, at: 92, stride: vertexStride, offset: vertexOffset), //Right 1 Top Lip
+                      let L2TLVertex = getVertexPosition(from: vertexData, at: 94, stride: vertexStride, offset: vertexOffset), //Right 2 Top Lip
+                      let L3TLVertex = getVertexPosition(from: vertexData, at: 96, stride: vertexStride, offset: vertexOffset), //Right 3 Top Lip
+                      let L4TLVertex = getVertexPosition(from: vertexData, at: 108, stride: vertexStride, offset: vertexOffset), //Right 4 Top Lip
+                      let L5TLVertex = getVertexPosition(from: vertexData, at: 107, stride: vertexStride, offset: vertexOffset), //Right 5 Top Lip
+                      let L6TLVertex = getVertexPosition(from: vertexData, at: 104, stride: vertexStride, offset: vertexOffset), //Right 6 Top Lip
+                      let L7TLVertex = getVertexPosition(from: vertexData, at: 186, stride: vertexStride, offset: vertexOffset), //Right 7 Top Lip
+                      let L8TLVertex = getVertexPosition(from: vertexData, at: 396, stride: vertexStride, offset: vertexOffset), //Right 8 Top Lip
+                      let R1BLVertex = getVertexPosition(from: vertexData, at: 697, stride: vertexStride, offset: vertexOffset), //Left 1 Top Lip
+                      let R2BLVertex = getVertexPosition(from: vertexData, at: 706, stride: vertexStride, offset: vertexOffset), //Left 2 Top Lip
+                      let R3BLVertex = getVertexPosition(from: vertexData, at: 722, stride: vertexStride, offset: vertexOffset), //Left 3 Top Lip
+                      let R4BLVertex = getVertexPosition(from: vertexData, at: 713, stride: vertexStride, offset: vertexOffset), //Left 4 Top Lip
+                      let R5BLVertex = getVertexPosition(from: vertexData, at: 571, stride: vertexStride, offset: vertexOffset), //Left 5 Top Lip
+                      let R6BLVertex = getVertexPosition(from: vertexData, at: 569, stride: vertexStride, offset: vertexOffset), //Left 6 Top Lip
+                      let R7BLVertex = getVertexPosition(from: vertexData, at: 566, stride: vertexStride, offset: vertexOffset), //Left 7 Top Lip
+                      let R8BLVertex = getVertexPosition(from: vertexData, at: 837, stride: vertexStride, offset: vertexOffset), //Left 8 Top Lip
+                      let L1BLVertex = getVertexPosition(from: vertexData, at: 262, stride: vertexStride, offset: vertexOffset), //Right 1 Top Lip
+                      let L2BLVertex = getVertexPosition(from: vertexData, at: 271, stride: vertexStride, offset: vertexOffset), //Right 2 Top Lip
+                      let L3BLVertex = getVertexPosition(from: vertexData, at: 287, stride: vertexStride, offset: vertexOffset), //Right 3 Top Lip
+                      let L4BLVertex = getVertexPosition(from: vertexData, at: 278, stride: vertexStride, offset: vertexOffset), //Right 4 Top Lip
+                      let L5BLVertex = getVertexPosition(from: vertexData, at: 122, stride: vertexStride, offset: vertexOffset), //Right 5 Top Lip
+                      let L6BLVertex = getVertexPosition(from: vertexData, at: 120, stride: vertexStride, offset: vertexOffset), //Right 6 Top Lip
+                      let L7BLVertex = getVertexPosition(from: vertexData, at: 117, stride: vertexStride, offset: vertexOffset), //Right 7 Top Lip
+                      let L8BLVertex = getVertexPosition(from: vertexData, at: 407, stride: vertexStride, offset: vertexOffset), //Right 8 Top Lip
+                      let leftEyeInsideVertex = getVertexPosition(from: vertexData, at: 358, stride: vertexStride, offset: vertexOffset), //Left Eye Inside
+                      let leftEyeOutsideVertex = getVertexPosition(from: vertexData, at: 1101, stride: vertexStride, offset: vertexOffset), //Left Eye Outside
+                      let rightEyeInsideVertex = getVertexPosition(from: vertexData, at: 789, stride: vertexStride, offset: vertexOffset), //Right Eye Inside
+                      let rightEyeOutsideVertex = getVertexPosition(from: vertexData, at: 1069, stride: vertexStride, offset: vertexOffset), //Right Eye Outside
                       let leftEyeTopVertex = getVertexPosition(from: vertexData, at: 1094, stride: vertexStride, offset: vertexOffset), // 1094
                       let leftEyeBottomVertex = getVertexPosition(from: vertexData, at: 1108, stride: vertexStride, offset: vertexOffset), // 1107
                       let rightEyeTopVertex = getVertexPosition(from: vertexData, at: 1076, stride: vertexStride, offset: vertexOffset), //1075
                       let rightEyeBottomVertex = getVertexPosition(from: vertexData, at: 1062, stride: vertexStride, offset: vertexOffset) else { return } // 1063
+                    
+                      let adjlowerlipmidlineVertex = SCNVector3(nosebridgeVertex.x, mindlineBottomVertex.y, mindlineBottomVertex.z)
+                      let adjtoplipmidlineVertex = SCNVector3(nosebridgeVertex.x, midlineTopVertex.y, midlineTopVertex.z)
+                
+                
+                var leftMouthNodes: [SCNVector3] = []
+                    for index in leftMouthIndices {
+                        if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
+                            leftMouthNodes.append(position)
+                   }
+               }
+                var rightMouthNodes: [SCNVector3] = []
+                    for index in rightMouthIndices {
+                        if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
+                            rightMouthNodes.append(position)
+                   }
+               }
                 
                 var insideMouthNodes: [SCNVector3] = []
-               for index in insideMouthIndices {
-                   if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
+                    for index in insideMouthIndices {
+                        if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
                        insideMouthNodes.append(position)
                    }
                }
                 
-                let leftMouthHeightCM = (leftMouthVertex.y - chinVertex.y) * 100 // leftMouthVertex.y * 100 + 5
-                let rightMouthHeightCM = (rightMouthVertex.y - chinVertex.y) * 100 // rightMouthVertex.y * 100 + 5
+                var insiderighteyeNodes: [SCNVector3] = []
+                            for index in righteyeIndices {
+                                if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
+                                    insiderighteyeNodes.append(position)
+                                }
+                            }
+
+                var insidelefteyeNodes: [SCNVector3] = []
+                    for index in lefteyeIndices {
+                                if let position = getVertexPosition(from: vertexData, at: index, stride: vertexStride, offset: vertexOffset) {
+                                    insidelefteyeNodes.append(position)
+                                }
+                            }
                 
-                let leftMouthWidthCM = abs(leftMouthVertex.x * 100)
-                let rightMouthWidthCM = abs(rightMouthVertex.x * 100)
+                
+                let leftMouthHeightCM = (leftMouthVertex.y - chinVertex.y) * 1000 // leftMouthVertex.y * 1000 + 5
+                let rightMouthHeightCM = (rightMouthVertex.y - chinVertex.y) * 1000 // rightMouthVertex.y * 100 + 5
+                
+                let leftMouthWidthCM = abs(leftMouthVertex.x * 1000)
+                let rightMouthWidthCM = abs(rightMouthVertex.x * 1000)
+                
+                let CommissureWidth = (abs(leftMouthVertex.x) + abs(rightMouthVertex.x)) * 1000  //CommissureWidth
+                self.maxCommissureWidth = max(self.maxCommissureWidth, CommissureWidth)
+                self.minCommissureWidth = min(self.minCommissureWidth, CommissureWidth)
+
+                let LeftMouthVertical = (leftLowerLipVertex.y - leftChinVertex.y) * 1000 //Left Lip to Chin Verticle
+                self.maxLeftMouthVertical = max(self.maxLeftMouthVertical, LeftMouthVertical)
+                self.minLeftMouthVertical = min(self.minLeftMouthVertical, LeftMouthVertical)
+
+                let RightMouthVertical = (rightLowerLipVertex.y - rightChinVertex.y) * 1000 //Right Lip to Chin Verticle
+                self.maxRightMouthVertical = max(self.maxRightMouthVertical, RightMouthVertical)
+                self.minRightMouthVertical = min(self.minRightMouthVertical, RightMouthVertical)
+                
+                let LeftCommPosLowLip = (sqrt(pow((leftMouthVertex.y - lowerLipMidlineVertex.y),2)+pow((leftMouthVertex.x-midchinVertex.x),2))) * 1000 //Left Hypotenuse Commissure Position to Lower Lip Midline, using x axis measured to chin y-axis for midline instead of lower lip midline
+                self.maxLeftCommPosLowLip = max(self.maxLeftCommPosLowLip, LeftCommPosLowLip)
+                self.minLeftCommPosLowLip = min(self.minLeftCommPosLowLip, LeftCommPosLowLip)
+
+                let RightCommPosLowLip = (sqrt(pow((rightMouthVertex.y - lowerLipMidlineVertex.y),2)+pow((rightMouthVertex.x-midchinVertex.x),2))) * 1000 //Right Hypotenuse Commissure Position to Lower Lip Midline, using x axis measured to chin y-axis for midline instead of lower lip midline
+                self.maxRightCommPosLowLip = max(self.maxRightCommPosLowLip, RightCommPosLowLip)
+                self.minRightCommPosLowLip = min(self.minRightCommPosLowLip, RightCommPosLowLip)
                 
                 self.maxLeftMouthCorner_x = max(self.maxLeftMouthCorner_x, leftMouthWidthCM)
                 self.maxLeftMouthCorner_y = max(self.maxLeftMouthCorner_y, leftMouthHeightCM)
@@ -722,79 +1180,350 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //                self.maxHeightDifference = max(self.maxHeightDifference, heightDifference)
 //                self.maxWidthDifference = max(self.maxWidthDifference, widthDifference)
                 
-                let leftEyeHeight = abs(leftEyeTopVertex.y - leftEyeBottomVertex.y) * 100
-                let rightEyeHeight = abs(rightEyeTopVertex.y - rightEyeBottomVertex.y) * 100
+                let leftEyeHeight = abs(leftEyeTopVertex.y - leftEyeBottomVertex.y) * 1000
+                let rightEyeHeight = abs(rightEyeTopVertex.y - rightEyeBottomVertex.y) * 1000
                 
+               // let leftEyeHeight = (sqrt((pow((leftEyeTopVertex.y - leftEyeBottomVertex.y),2)+pow((leftEyeTopVertex.x - leftEyeBottomVertex.x),2)))) * 1000 // eye height hyp.
+              //  let rightEyeHeight = (sqrt((pow((rightEyeTopVertex.y - rightEyeBottomVertex.y),2)+pow((rightEyeTopVertex.x - rightEyeBottomVertex.x),2)))) * 1000 // eye height hyp.
+
                 self.minLeftEyeClosure = min(self.minLeftEyeClosure, leftEyeHeight)
                 self.minRightEyeClosure = min(self.minRightEyeClosure, rightEyeHeight)
                 self.maxLeftEye = max(self.maxLeftEye, leftEyeHeight)
                 self.maxRightEye = max(self.maxRightEye, rightEyeHeight)
                 
-                let insideMouthArea = calculatePolygonArea(vertices: insideMouthNodes) * 10000
+                let LeftEyeWidth = abs(leftEyeOutsideVertex.x - leftEyeInsideVertex.x) * 1000
+                self.maxLeftEyeWidth = max(self.maxLeftEyeWidth, LeftEyeWidth)
+                self.minLeftEyeWidth = min(self.maxLeftEyeWidth, LeftEyeWidth)
+                
+                let RightEyeWidth = abs(rightEyeOutsideVertex.x - rightEyeInsideVertex.x) * 1000
+                self.maxRightEyeWidth = max(self.maxRightEyeWidth, RightEyeWidth)
+                self.minRightEyeWidth = min(self.maxRightEyeWidth, RightEyeWidth)
+                
+                //AN Test using Sym Distance for Lip "quadrant" Calculations
+                
+                    //Right Top Lip XYZ Measurement
+                let RightTopLipMes = ((adjtoplipmidlineVertex.distance(to: R1TLVertex)) + (R1TLVertex.distance(to: R2TLVertex)) + (R2TLVertex.distance(to: R3TLVertex)) + (R3TLVertex.distance(to: R4TLVertex)) + (R4TLVertex.distance(to: R5TLVertex)) + (R5TLVertex.distance(to: R6TLVertex)) + (R6TLVertex.distance(to: R7TLVertex)) + (R7TLVertex.distance(to: R8TLVertex)) + (R8TLVertex.distance(to: rightMouthVertex))) * 1000
+                self.maxRightTopLipMes = max(self.maxRightTopLipMes, RightTopLipMes)
+                self.minRightTopLipMes = min(self.minRightTopLipMes, RightTopLipMes)
+                
+                    //Left Top Lip XYZ Measurement
+                let LeftTopLipMes = ((adjtoplipmidlineVertex.distance(to: L1TLVertex)) + (L1TLVertex.distance(to: L2TLVertex)) + (L2TLVertex.distance(to: L3TLVertex)) + (L3TLVertex.distance(to: L4TLVertex)) + (L4TLVertex.distance(to: L5TLVertex)) + (L5TLVertex.distance(to: L6TLVertex)) + (L6TLVertex.distance(to: L7TLVertex)) + (L7TLVertex.distance(to: L8TLVertex)) + (L8TLVertex.distance(to: leftMouthVertex))) * 1000
+                self.maxLeftTopLipMes = max(self.maxLeftTopLipMes, LeftTopLipMes)
+                self.minLeftTopLipMes = min(self.minLeftTopLipMes, LeftTopLipMes)
+                
+                    //Right Bottom Lip XYZ Measurement
+                let RightBotLipMes = ((adjlowerlipmidlineVertex.distance(to: R1BLVertex)) + (R1BLVertex.distance(to: R2BLVertex)) + (R2BLVertex.distance(to: R3BLVertex)) + (R3BLVertex.distance(to: R4BLVertex)) + (R4BLVertex.distance(to: R5BLVertex)) + (R5BLVertex.distance(to: R6BLVertex)) + (R6BLVertex.distance(to: R7BLVertex)) + (R7BLVertex.distance(to: R8BLVertex)) + (R8BLVertex.distance(to: rightMouthVertex))) * 1000
+                self.maxRightBotLipMes = max(self.maxRightBotLipMes, RightBotLipMes)
+                self.minRightBotLipMes = min(self.minRightBotLipMes, RightBotLipMes)
+                
+                    //Left Bottom Lip XYZ Measurement
+                let LeftBotLipMes = ((adjlowerlipmidlineVertex.distance(to: L1BLVertex)) + (L1BLVertex.distance(to: L2BLVertex)) + (L2BLVertex.distance(to: L3BLVertex)) + (L3BLVertex.distance(to: L4BLVertex)) + (L4BLVertex.distance(to: L5BLVertex)) + (L5BLVertex.distance(to: L6BLVertex)) + (L6BLVertex.distance(to: L7BLVertex)) + (L7BLVertex.distance(to: L8BLVertex)) + (L8BLVertex.distance(to: leftMouthVertex))) * 1000
+                self.maxLeftBotLipMes = max(self.maxLeftBotLipMes, LeftBotLipMes)
+                self.minLeftBotLipMes = min(self.minLeftBotLipMes, LeftBotLipMes)
+                
+                let insideRightEyeArea = calculatePolygonArea(vertices: insiderighteyeNodes) * 1000000
+                self.maxRightEyeArea = max(self.maxRightEyeArea, insideRightEyeArea)
+                self.minRightEyeArea = min(self.minRightEyeArea, insideRightEyeArea)
+
+                let insideLeftEyeArea = calculatePolygonArea(vertices: insidelefteyeNodes) * 1000000
+                self.maxLeftEyeArea = max(self.maxLeftEyeArea, insideLeftEyeArea)
+                self.minLeftEyeArea = min(self.minLeftEyeArea, insideLeftEyeArea)
+                
+                let insideMouthArea = calculatePolygonArea(vertices: insideMouthNodes) * 1000000
                 self.maxDentalShow = max(self.maxDentalShow, insideMouthArea)
                 self.minDentalShow = min(self.minDentalShow, insideMouthArea)
                 
-                DispatchQueue.main.async {
-                    self.updateMouthLabel(
-                                left_x: leftMouthWidthCM,
-                                min_left_x: self.minLeftMouthCorner_x,
-                                max_left_x: self.maxLeftMouthCorner_x,
-                                right_x: rightMouthWidthCM,
-                                min_right_x: self.minRightMouthCorner_x,
-                                max_right_x: self.maxRightMouthCorner_x,
-                                left_y: leftMouthHeightCM,
-                                min_left_y: self.minLeftMouthCorner_y,
-                                max_left_y: self.maxLeftMouthCorner_y,
-                                right_y: rightMouthHeightCM,
-                                min_right_y: self.minRightMouthCorner_y,
-                                max_right_y: self.maxRightMouthCorner_y,
-                                area: insideMouthArea,
-                                min_area: self.minDentalShow,
-                                max_area: self.maxDentalShow
-                            )
+                //test calculations for new left right mouth area calculations
+                
+                let rightMouthArea = calculatePolygonArea(vertices: rightSCN) * 1000000
+                let leftMouthArea  = calculatePolygonArea(vertices: leftSCN) * 1000000
+                
+               // let rightMouthArea = calculatePolygonArea(vertices: rightMouthNodes) * 1000000
+                self.maxRightMouthArea = max(self.maxRightMouthArea, rightMouthArea)
+                self.minRightMouthArea = min(self.minRightMouthArea, rightMouthArea)
+                
+               // let leftMouthArea = calculatePolygonArea(vertices: leftMouthNodes) * 1000000
+                self.maxLeftMouthArea = max(self.maxLeftMouthArea, leftMouthArea)
+                self.minLeftMouthArea = min(self.minLeftMouthArea, leftMouthArea)
+                
+                // 1️⃣2️⃣ – (optional) visualize each half in a different color (for testing mouth area)
+                //    node.childNode(withName: "rightMouth", recursively: false)?.removeFromParentNode()
+                //    let rightNode = makeLocalQuadNodeSCN(rightSCN)
+                //    rightNode.name = "rightMouth"
+                //    rightNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blue.withAlphaComponent(0.4)
+                //    node.addChildNode(rightNode)
+
+                 //   node.childNode(withName:  "leftMouth", recursively: false)?.removeFromParentNode()
+                 //   let leftNode  = makeLocalQuadNodeSCN(leftSCN)
+                 //   leftNode.name  = "leftMouth"
+                 //   leftNode.geometry?.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.4)
+                //    node.addChildNode(leftNode)
+               
+                
+                //Symmetry Scores - AN Test - Facial Palsy Patients - no longer used
+
+                //Symmetry Score for Commissure to Midline of Lower Lip
+                let FPsymComLowLip = (1-(abs(LeftCommPosLowLip-RightCommPosLowLip)/max(LeftCommPosLowLip,RightCommPosLowLip)))*100
+                self.maxFPsymComLowLip = max(self.maxFPsymComLowLip, FPsymComLowLip)
+                self.minFPsymComLowLip = min(self.minFPsymComLowLip, FPsymComLowLip)
+
+                //Symmetry Score for Lip to Chin Vertical Distance
+                let FPsymMouthVertical = (1-(abs(LeftMouthVertical-RightMouthVertical)/max(LeftMouthVertical,RightMouthVertical)))*100
+                self.maxFPsymMouthVertical = max(self.maxFPsymMouthVertical, FPsymMouthVertical)
+                self.minFPsymMouthVertical = min(self.minFPsymMouthVertical, FPsymMouthVertical)
+
+                //Symmetry Score for Eye Height
+                let FPsymEyeHeight = (1-(abs(leftEyeHeight-rightEyeHeight)/max(leftEyeHeight,rightEyeHeight)))*100
+                self.maxFPsymEyeHeight = max(self.maxFPsymEyeHeight, FPsymEyeHeight)
+                self.minFPsymEyeHeight = min(self.minFPsymEyeHeight, FPsymEyeHeight)
+                
+                //Symmetry Scores - AN Test - Unaffected Patients - no longer used
+
+                //Symmetry Score for Commissure to Midline of Lower Lip
+                let NPsymComLowLip = (1-(abs(LeftCommPosLowLip-RightCommPosLowLip)/((LeftCommPosLowLip + RightCommPosLowLip)/2)))*100
+                self.maxNPsymComLowLip = max(self.maxNPsymComLowLip, FPsymComLowLip)
+                self.minNPsymComLowLip = min(self.minNPsymComLowLip, FPsymComLowLip)
+
+                //Symmetry Score for Lip to Chin Vertical Distance
+                let NPsymMouthVertical = (1-(abs(LeftMouthVertical-RightMouthVertical)/((LeftMouthVertical + RightMouthVertical)/2)))*100
+                self.maxNPsymMouthVertical = max(self.maxNPsymMouthVertical, NPsymMouthVertical)
+                self.minNPsymMouthVertical = min(self.minNPsymMouthVertical, NPsymMouthVertical)
+
+                //Symmetry Score for Eye Height
+                let NPsymEyeHeight = (1-(abs(leftEyeHeight-rightEyeHeight)/((leftEyeHeight + rightEyeHeight)/2)))*100
+                self.maxNPsymEyeHeight = max(self.maxNPsymEyeHeight, NPsymEyeHeight)
+                self.minNPsymEyeHeight = min(self.minNPsymEyeHeight, NPsymEyeHeight)
+                
+                //Logging variables for CSV
+                currentinsideMouthArea = insideMouthArea
+                currentCommissureWidth = CommissureWidth
+                currentLeftMouthVertical = LeftMouthVertical
+                currentRightMouthVertical = RightMouthVertical
+                currentRightTopLipMes = RightTopLipMes
+                currentLeftTopLipMes = LeftTopLipMes
+                currentRightBotLipMes = RightBotLipMes
+                currentLeftBotLipMes = LeftBotLipMes
+                currentleftEyeHeight = leftEyeHeight
+                currentrightEyeHeight = rightEyeHeight
+                currentinsideRightEyeArea = insideRightEyeArea
+                currentinsideLeftEyeArea = insideLeftEyeArea
+                currentRightEyeWidth = RightEyeWidth
+                currentLeftEyeWidth = LeftEyeWidth
+                currentLeftMouthArea = leftMouthArea
+                currentRightMouthArea = rightMouthArea
+                    
+                    // 1) Remove last frame’s dots
+                    dotNodes.forEach { $0.removeFromParentNode() }
+                    dotNodes.removeAll()
+                    
+                    // 2) If toggle is OFF, skip drawing dots
+                    if isDotsEnabled {
+                        for i in mouthIndices {
+                            let dot = placeDotOnVertex(at: i,
+                                                       with: vertexData,
+                                                       stride: vertexStride,
+                                                       offset: vertexOffset,
+                                                       on: node,
+                                                       color: .white)
+                            dotNodes.append(dot)
+                        }
+                        
+                        for i in chinIndices {
+                            let dot = placeDotOnVertex(at: i,
+                                                       with: vertexData,
+                                                       stride: vertexStride,
+                                                       offset: vertexOffset,
+                                                       on: node,
+                                                       color: .white)
+                            dotNodes.append(dot)
+                        }
+                        
+                        for i in midlineIndices {
+                            let dot = placeDotOnVertex(at: i,
+                                                       with: vertexData,
+                                                       stride: vertexStride,
+                                                       offset: vertexOffset,
+                                                       on: node,
+                                                       color: .white)
+                            dotNodes.append(dot)
+                        }
+                        
+                        for i in lowerlipIndices {
+                            let dot = placeDotOnVertex(at: i,
+                                                       with: vertexData,
+                                                       stride: vertexStride,
+                                                       offset: vertexOffset,
+                                                       on: node,
+                                                       color: .white)
+                            dotNodes.append(dot)
+                        }
+                    }
+                    
+                    
+                    DispatchQueue.main.async {
+                        self.updateMouthLabel(
+                            left_x: leftMouthWidthCM,
+                            min_left_x: self.minLeftMouthCorner_x,
+                            max_left_x: self.maxLeftMouthCorner_x,
+                            right_x: rightMouthWidthCM,
+                            min_right_x: self.minRightMouthCorner_x,
+                            max_right_x: self.maxRightMouthCorner_x,
+                            left_y: leftMouthHeightCM,
+                            min_left_y: self.minLeftMouthCorner_y,
+                            max_left_y: self.maxLeftMouthCorner_y,
+                            right_y: rightMouthHeightCM,
+                            min_right_y: self.minRightMouthCorner_y,
+                            max_right_y: self.maxRightMouthCorner_y,
+                            area: insideMouthArea,
+                            min_area: self.minDentalShow,
+                            max_area: self.maxDentalShow,
+                            cwdistance: CommissureWidth,
+                            min_cwdistance: self.minCommissureWidth,
+                            max_cwdistance: self.maxCommissureWidth,
+                            left_mouth_vertical: LeftMouthVertical,
+                            min_left_mouth_vertical: self.minLeftMouthVertical,
+                            max_left_mouth_vertical: self.maxLeftMouthVertical,
+                            right_mouth_vertical: RightMouthVertical,
+                            min_right_mouth_vertical: self.minRightMouthVertical,
+                            max_right_mouth_vertical: self.maxRightMouthVertical,
+                            left_commissure_hypotenuse: LeftCommPosLowLip,
+                            min_left_commissure_hypotenuse: self.minLeftCommPosLowLip,
+                            max_left_commissure_hypotenuse: self.maxLeftCommPosLowLip,
+                            right_commissure_hypotenuse: RightCommPosLowLip,
+                            min_right_commissure_hypotenuse: self.minRightCommPosLowLip,
+                            max_right_commissure_hypotenuse: self.maxRightCommPosLowLip,
+                            fp_sym_com_low_lip: FPsymComLowLip,
+                            min_fp_sym_com_low_lip: self.minFPsymComLowLip,
+                            max_fp_sym_com_low_lip: self.maxFPsymComLowLip,
+                            np_sym_com_low_lip: NPsymComLowLip,
+                            min_np_sym_com_low_lip: self.minNPsymComLowLip,
+                            max_np_sym_com_low_lip: self.maxNPsymComLowLip,
+                            fp_sym_mouth_vertical: FPsymMouthVertical,
+                            min_fp_sym_mouth_vertical: self.minFPsymMouthVertical,
+                            max_fp_sym_mouth_vertical: self.maxFPsymMouthVertical,
+                            np_sym_mouth_vertical: NPsymMouthVertical,
+                            min_np_sym_mouth_vertical: self.minNPsymMouthVertical,
+                            max_np_sym_mouth_vertical: self.maxNPsymMouthVertical,
+                            right_top_lip_mes: RightTopLipMes,
+                            min_right_top_lip_mes: self.minRightTopLipMes,
+                            max_right_top_lip_mes: self.maxRightTopLipMes,
+                            left_top_lip_mes: LeftTopLipMes,
+                            min_left_top_lip_mes: self.minLeftTopLipMes,
+                            max_left_top_lip_mes: self.maxLeftTopLipMes,
+                            right_bot_lip_mes: RightBotLipMes,
+                            min_right_bot_lip_mes: self.minRightBotLipMes,
+                            max_right_bot_lip_mes: self.maxRightBotLipMes,
+                            left_bot_lip_mes: LeftBotLipMes,
+                            min_left_bot_lip_mes: self.minLeftBotLipMes,
+                            max_left_bot_lip_mes: self.maxLeftBotLipMes,
+                            left_mouth_area: leftMouthArea,
+                            min_left_mouth_area: self.minLeftMouthArea,
+                            max_left_mouth_area: self.maxLeftMouthArea,
+                            right_mouth_area: rightMouthArea,
+                            min_right_mouth_area: self.minRightMouthArea,
+                            max_right_mouth_area: self.maxRightMouthArea
+                        )
                             
-                            self.updateEyeLabel(
-                                left_eye_height: leftEyeHeight,
-                                min_left_eye_height: self.minLeftEyeClosure,
-                                max_left_eye_height: self.maxLeftEye,
-                                right_eye_height: rightEyeHeight,
-                                min_right_eye_height: self.minRightEyeClosure,
-                                max_right_eye_height: self.maxRightEye
-                            )
-//                    switch self.viewOption {
-//                    case "Smile":
-//                        self.updateSmileSymmetryLabel(
-//                            left_x: leftMouthWidthCM,
-//                            min_left_x: self.minLeftMouthCorner_x,
-//                            max_left_x: self.maxLeftMouthCorner_x,
-//                            right_x: rightMouthWidthCM,
-//                            min_right_x: self.minRightMouthCorner_x,
-//                            max_right_x: self.maxRightMouthCorner_x,
-//                            left_y: leftMouthHeightCM,
-//                            min_left_y: self.minLeftMouthCorner_y,
-//                            max_left_y: self.maxLeftMouthCorner_y,
-//                            right_y: rightMouthHeightCM,
-//                            min_right_y: self.minRightMouthCorner_y,
-//                            max_right_y: self.maxRightMouthCorner_y,
-//                            area: insideMouthArea,
-//                            max_area: self.maxDentalShow
-//                        )
-//                    case "Eye Closure":
-//                        self.updateEyeSymmetryLabel(
-//                            left_eye_height: leftEyeHeight,
-//                            min_left_eye_height: self.minLeftEyeClosure,
-//                            max_left_eye_height: self.maxLeftEye,
-//                            right_eye_height: rightEyeHeight,
-//                            min_right_eye_height: self.minRightEyeClosure,
-//                            max_right_eye_height: self.maxRightEye
-//                        )
-//
-//                    default:
-//                        break
-//                    }
+                        self.updateEyeLabel(
+                            left_eye_height: leftEyeHeight,
+                            min_left_eye_height: self.minLeftEyeClosure,
+                            max_left_eye_height: self.maxLeftEye,
+                            right_eye_height: rightEyeHeight,
+                            min_right_eye_height: self.minRightEyeClosure,
+                            max_right_eye_height: self.maxRightEye,
+                            right_eye_area: insideRightEyeArea,
+                            min_right_eye_area: self.minRightEyeArea,
+                            max_right_eye_area: self.maxRightEyeArea,
+                            left_eye_area: insideLeftEyeArea,
+                            min_left_eye_area: self.minLeftEyeArea,
+                            max_left_eye_area: self.maxLeftEyeArea,
+                            fp_sym_eye_height: FPsymEyeHeight,
+                            min_fp_sym_eye_height: self.minFPsymEyeHeight,
+                            max_fp_sym_eye_height: self.maxFPsymEyeHeight,
+                            np_sym_eye_height: NPsymEyeHeight,
+                            min_np_sym_eye_height: self.minNPsymEyeHeight,
+                            max_np_sym_eye_height: self.maxNPsymEyeHeight,
+                            right_eye_width: RightEyeWidth,
+                            min_right_eye_width: self.minRightEyeWidth,
+                            max_right_eye_width: self.maxRightEyeWidth,
+                            left_eye_width: LeftEyeWidth,
+                            min_left_eye_width: self.minLeftEyeWidth,
+                            max_left_eye_width: self.maxLeftEyeWidth
+                        )
+                        //                    switch self.viewOption {
+                        //                    case "Smile":
+                        //                        self.updateSmileSymmetryLabel(
+                        //                            left_x: leftMouthWidthCM,
+                        //                            min_left_x: self.minLeftMouthCorner_x,
+                        //                            max_left_x: self.maxLeftMouthCorner_x,
+                        //                            right_x: rightMouthWidthCM,
+                        //                            min_right_x: self.minRightMouthCorner_x,
+                        //                            max_right_x: self.maxRightMouthCorner_x,
+                        //                            left_y: leftMouthHeightCM,
+                        //                            min_left_y: self.minLeftMouthCorner_y,
+                        //                            max_left_y: self.maxLeftMouthCorner_y,
+                        //                            right_y: rightMouthHeightCM,
+                        //                            min_right_y: self.minRightMouthCorner_y,
+                        //                            max_right_y: self.maxRightMouthCorner_y,
+                        //                            area: insideMouthArea,
+                        //                            max_area: self.maxDentalShow
+                        //                        )
+                        //                    case "Eye Closure":
+                        //                        self.updateEyeSymmetryLabel(
+                        //                            left_eye_height: leftEyeHeight,
+                        //                            min_left_eye_height: self.minLeftEyeClosure,
+                        //                            max_left_eye_height: self.maxLeftEye,
+                        //                            right_eye_height: rightEyeHeight,
+                        //                            min_right_eye_height: self.minRightEyeClosure,
+                        //                            max_right_eye_height: self.maxRightEye
+                        //                        )
+                        //
+                        //                    default:
+                        //                        break
+                        //                    }
+                    }
+               
+                //Dynamic Movement Calculations
+                        if let neutral = neutralExpression {
+                            currentpctDMLeftEyeHeight = (abs(currentleftEyeHeight-neutral.leftDMEyeHeight)/neutral.leftDMEyeHeight)*100
+                            currentpctDMRightEyeHeight = (abs(currentrightEyeHeight-neutral.rightDMEyeHeight)/neutral.rightDMEyeHeight)*100
+                            
+                            currentpctDMLeftEyeArea = (abs(currentinsideLeftEyeArea-neutral.leftDMEyeArea)/neutral.leftDMEyeArea)*100
+                            currentpctDMRightEyeArea = (abs(currentinsideRightEyeArea-neutral.rightDMEyeArea)/neutral.rightDMEyeArea)*100
+                            
+                            currentpctDMLeftLLMovement = (abs(currentLeftBotLipMes-neutral.leftDMLLMovement)/neutral.leftDMLLMovement)*100
+                            currentpctDMRightLLMovement = (abs(currentRightBotLipMes-neutral.rightDMLLMovement)/neutral.rightDMLLMovement)*100
+                            
+                            currentpctDMLeftMouthArea = (abs(currentLeftMouthArea-neutral.leftDMMouthArea)/neutral.leftDMMouthArea)*100
+                            currentpctDMRightMouthArea = (abs(currentRightMouthArea-neutral.rightDMMouthArea)/neutral.rightDMMouthArea)*100
+                            
+                        } else {
+                            currentpctDMLeftEyeHeight  = 0
+                            currentpctDMRightEyeHeight = 0
+                            currentpctDMLeftEyeArea  = 0
+                            currentpctDMRightEyeArea = 0
+                            currentpctDMLeftLLMovement = 0
+                            currentpctDMRightLLMovement = 0
+                            currentpctDMLeftMouthArea = 0
+                            currentpctDMRightMouthArea = 0
                 }
-            }
-        }
+                    
+                   }
+                    
+                        DispatchQueue.main.async {
+                            self.updatedmLabel(
+                                pct_dm_left_eye_height: self.currentpctDMLeftEyeHeight,
+                                pct_dm_right_eye_height: self.currentpctDMRightEyeHeight,
+                                pct_dm_left_eye_area: self.currentpctDMLeftEyeArea,
+                                pct_dm_right_eye_area: self.currentpctDMRightEyeArea,
+                                pct_dm_left_ll_movement: self.currentpctDMLeftLLMovement,
+                                pct_dm_right_ll_movement: self.currentpctDMRightLLMovement,
+                                pct_dm_left_mouth_area: self.currentpctDMLeftMouthArea,
+                                pct_dm_right_mouth_area: self.currentpctDMRightMouthArea
+                        )
+                    }
+                }
+        
     
     func calculatePolygonArea(vertices: [SCNVector3]) -> Float {
             var area: Float = 0.0
@@ -904,38 +1633,52 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         //        // Process the image data (e.g., save it to the photo library, display it, etc.)
         //    }
         
-    func placeDotOnVertex(at index: Int, with vertexData: Data, stride: Int, offset: Int, on node: SCNNode, color: UIColor) {
-            vertexData.withUnsafeBytes { buffer in
-                // Calculate the byte index for the desired vertex
-                let byteIndex = stride * index + offset
-                
-                // Ensure the byte index + size of three floats does not exceed the buffer size
-                guard byteIndex + MemoryLayout<Float>.size * 3 <= buffer.count else {
-                    print("Vertex index out of range")
-                    return
-                }
-                
-                // Access the vertex position directly
-                let vertexPointer = buffer.baseAddress!.advanced(by: byteIndex).assumingMemoryBound(to: Float.self)
-                let vertexPosition = SCNVector3(x: vertexPointer[0], y: vertexPointer[1], z: vertexPointer[2])
-                
-                // Add or update the dot at the vertex position
-                addOrUpdateDot(at: vertexPosition, at: index, on: node, color: color)
+    @discardableResult
+    func placeDotOnVertex(
+        at index: Int,
+        with vertexData: Data,
+        stride vertexStride: Int,
+        offset vertexOffset: Int,
+        on node: SCNNode,
+        color: UIColor
+    ) -> SCNNode {
+        // compute byteIndex & vertexPosition as before
+        var position = SCNVector3Zero
+        vertexData.withUnsafeBytes { buffer in
+            let byteIndex = vertexStride * index + vertexOffset
+            guard byteIndex + MemoryLayout<Float>.size * 3 <= buffer.count else {
+                fatalError("Vertex index out of range")
             }
+            let ptr = buffer.baseAddress!.advanced(by: byteIndex).assumingMemoryBound(to: Float.self)
+            position = SCNVector3(ptr[0], ptr[1], ptr[2])
         }
+
+        // create the dot node here
+        let sphere = SCNSphere(radius: 0.001)
+        sphere.firstMaterial?.diffuse.contents = color
+        let sphereNode = SCNNode(geometry: sphere)
+        sphereNode.position = position
+
+        // add it to the face‐mesh parent
+        node.addChildNode(sphereNode)
+
+        // return it so the caller can store it in dotNodes
+        return sphereNode
+    }
+    
 //    func placeDotOnVertex(at index: Int, with vertexData: Data, stride: Int, offset: Int, on node: SCNNode, color: UIColor) {
 //        // Calculate the byte index for the desired vertex
 //        let byteIndex = stride * index + offset
-//        
+//
 //        // Ensure the byte index + size of three floats does not exceed the buffer size
 //        guard byteIndex + MemoryLayout<Float>.size * 3 <= vertexData.count else {
 //            print("Vertex index out of range")
 //            return
 //        }
-//        
+//
 //        // Extract the relevant subdata
 //        let subdata = vertexData[byteIndex..<byteIndex + MemoryLayout<Float>.size * 3]
-//        
+//
 //        // Convert subdata to an array of Floats
 //        var vertexArray = [Float](repeating: 0, count: 3)
 //        _ = vertexArray.withUnsafeMutableBytes { vertexArrayBuffer in
@@ -944,7 +1687,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //
 //        // Create the vertex position
 //        let vertexPosition = SCNVector3(x: vertexArray[0], y: vertexArray[1], z: vertexArray[2])
-//        
+//
 //        // Add or update the dot at the vertex position
 //        addOrUpdateDot(at: vertexPosition, at: index, on: node, color: color)
 //    }
@@ -1126,6 +1869,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //        maxHeightDifference = 0.0
 //        maxWidthDifference = 0.0
         maxDentalShow = 0.0
+        minDentalShow = .greatestFiniteMagnitude
         minLeftMouthCorner_x = .greatestFiniteMagnitude
         maxLeftMouthCorner_x = 0.0
         minLeftMouthCorner_y = .greatestFiniteMagnitude
@@ -1134,6 +1878,41 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         maxRightMouthCorner_x = 0.0
         minRightMouthCorner_y = .greatestFiniteMagnitude
         maxRightMouthCorner_y = 0.0
+        minCommissureWidth = .greatestFiniteMagnitude
+        maxCommissureWidth = 0.0
+        minLeftMouthVertical = .greatestFiniteMagnitude
+        maxLeftMouthVertical = 0.0
+        minRightMouthVertical = .greatestFiniteMagnitude
+        maxRightMouthVertical = 0.0
+        minLeftCommPosLowLip = .greatestFiniteMagnitude
+        maxLeftCommPosLowLip = 0.0
+        minRightCommPosLowLip = .greatestFiniteMagnitude
+        maxRightCommPosLowLip = 0.0
+        minFPsymComLowLip = .greatestFiniteMagnitude
+        maxFPsymComLowLip = 0.0
+        minFPsymMouthVertical = .greatestFiniteMagnitude
+        maxFPsymMouthVertical = 0.0
+        minNPsymComLowLip = .greatestFiniteMagnitude
+        maxNPsymComLowLip = 0.0
+        minNPsymMouthVertical = .greatestFiniteMagnitude
+        maxNPsymMouthVertical = 0.0
+        minRightTopLipMes = .greatestFiniteMagnitude
+        maxRightTopLipMes = 0.0
+        minLeftTopLipMes = .greatestFiniteMagnitude
+        maxLeftTopLipMes = 0.0
+        minRightBotLipMes = .greatestFiniteMagnitude
+        maxRightBotLipMes = 0.0
+        minLeftBotLipMes = .greatestFiniteMagnitude
+        maxLeftBotLipMes = 0.0
+        minLeftMouthArea = .greatestFiniteMagnitude
+        maxLeftMouthArea = 0.0
+        minRightMouthArea = .greatestFiniteMagnitude
+        maxRightMouthArea = 0.0
+        neutralExpression   = nil
+        setNeutralButton.setTitle("Set Neutral Expression", for: .normal)
+        
+        
+        
         
     //    var currHeightDifference: Float = 0.0
     //    var currWidthDifference: Float = 0.0
@@ -1144,6 +1923,18 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         maxRightEye = 0.0
         minRightEyeClosure = .greatestFiniteMagnitude
         minLeftEyeClosure = .greatestFiniteMagnitude
+        minLeftEyeArea = .greatestFiniteMagnitude
+        maxLeftEyeArea = 0.0
+        minRightEyeArea = .greatestFiniteMagnitude
+        maxRightEyeArea = 0.0
+        minFPsymEyeHeight = .greatestFiniteMagnitude
+        maxFPsymEyeHeight = 0.0
+        minNPsymEyeHeight = .greatestFiniteMagnitude
+        maxNPsymEyeHeight = 0.0
+        minRightEyeWidth = .greatestFiniteMagnitude
+        maxRightEyeWidth = 0.0
+        minLeftEyeWidth = .greatestFiniteMagnitude
+        maxLeftEyeWidth = 0.0
         
         DispatchQueue.main.async {
             self.symmetryLabel.text = "Values have been reset"
@@ -1184,13 +1975,13 @@ class ViewController: UIViewController, ARSCNViewDelegate{
 //            return vertexData.withUnsafeBytes { buffer -> SCNVector3? in
 //                // Calculate the byte index for the desired vertex
 //                let byteIndex = stride * index + offset
-//                
+//
 //                // Ensure the byte index + size of three floats does not exceed the buffer size
 //                guard byteIndex + MemoryLayout<Float>.size * 3 <= buffer.count else {
 //                    print("Vertex index out of range")
 //                    return nil
 //                }
-//                
+//
 //                // Access the vertex position directly
 //                let vertexPointer = buffer.baseAddress!.advanced(by: byteIndex).assumingMemoryBound(to: Float.self)
 //                return SCNVector3(x: vertexPointer[0], y: vertexPointer[1], z: vertexPointer[2])
@@ -1311,10 +2102,10 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         let attributedString = NSMutableAttributedString(
             string: """
                              \t\tCurrent\tMin\tMax
-            Left Lip Corner Width\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
-            Right Lip Corner Width\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
-            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
-            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
+            Left Lip Corner Width\t\(String(format: "%.2f", left_x)) mm\t\(String(format: "%.2f", min_left_x)) mm\t\(String(format: "%.2f", max_left_x)) mm
+            Right Lip Corner Width\t\(String(format: "%.2f", right_x)) mm\t\(String(format: "%.2f", min_right_x)) mm\t\(String(format: "%.2f", max_right_x)) mm
+            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) mm\t\(String(format: "%.2f", min_left_y)) mm\t\(String(format: "%.2f", max_left_y)) mm
+            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) mm\t\(String(format: "%.2f", min_right_y)) mm\t\(String(format: "%.2f", max_right_y)) mm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1342,8 +2133,8 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         let attributedString = NSMutableAttributedString(
             string: """
                              \t\tCurrent\tMin\tMax
-            Left Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
-            Right Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
+            Left Eye Height           \t\(String(format: "%.2f", left_eye_height)) mm\t\(String(format: "%.2f", min_left_eye_height)) mm\t\(String(format: "%.2f", max_left_eye_height)) mm
+            Right Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) mm\t\(String(format: "%.2f", max_right_eye_height)) mm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1361,33 +2152,51 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         right_x: Float, min_right_x: Float, max_right_x: Float,
         left_y: Float, min_left_y: Float, max_left_y: Float,
         right_y: Float, min_right_y: Float, max_right_y: Float,
-        area: Float, min_area: Float, max_area: Float
+        area: Float, min_area: Float, max_area: Float,
+        cwdistance: Float, min_cwdistance: Float, max_cwdistance: Float,
+        left_mouth_vertical: Float, min_left_mouth_vertical: Float, max_left_mouth_vertical: Float,
+        right_mouth_vertical: Float, min_right_mouth_vertical: Float, max_right_mouth_vertical: Float,
+        left_commissure_hypotenuse: Float, min_left_commissure_hypotenuse: Float, max_left_commissure_hypotenuse: Float,
+        right_commissure_hypotenuse: Float, min_right_commissure_hypotenuse: Float, max_right_commissure_hypotenuse: Float,
+        fp_sym_com_low_lip: Float, min_fp_sym_com_low_lip: Float, max_fp_sym_com_low_lip: Float,
+        np_sym_com_low_lip: Float, min_np_sym_com_low_lip: Float, max_np_sym_com_low_lip: Float,
+        fp_sym_mouth_vertical: Float, min_fp_sym_mouth_vertical: Float, max_fp_sym_mouth_vertical: Float,
+        np_sym_mouth_vertical: Float, min_np_sym_mouth_vertical: Float, max_np_sym_mouth_vertical: Float,
+        right_top_lip_mes: Float, min_right_top_lip_mes: Float, max_right_top_lip_mes: Float,
+        left_top_lip_mes: Float, min_left_top_lip_mes: Float, max_left_top_lip_mes: Float,
+        right_bot_lip_mes: Float, min_right_bot_lip_mes: Float, max_right_bot_lip_mes: Float,
+        left_bot_lip_mes: Float, min_left_bot_lip_mes: Float, max_left_bot_lip_mes: Float,
+        left_mouth_area: Float, min_left_mouth_area: Float, max_left_mouth_area: Float,
+        right_mouth_area: Float, min_right_mouth_area: Float, max_right_mouth_area: Float
     ) {
         let paragraphStyle = NSMutableParagraphStyle()
         
         // Define tab stops at desired positions
         paragraphStyle.tabStops = [
-            NSTextTab(textAlignment: .left, location: 150),
+            NSTextTab(textAlignment: .left, location: 170),
             NSTextTab(textAlignment: .right, location: 300),
-            NSTextTab(textAlignment: .right, location: 450),
-            NSTextTab(textAlignment: .right, location: 600)
+            NSTextTab(textAlignment: .right, location: 380),
+            NSTextTab(textAlignment: .right, location: 450)
         ]
-        paragraphStyle.defaultTabInterval = 150
+        paragraphStyle.defaultTabInterval = 100
         paragraphStyle.lineBreakMode = .byWordWrapping
         
-        // Create attributed string with tab stops
         let attributedString = NSMutableAttributedString(
             string: """
-            Mouth Metrics:
-            \t\tCurrent\tMin\tMax
-            Left Lip Corner Offset\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
-            Right Lip Corner Offset\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
-            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
-            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
-            Dental Show Area\t\t\(String(format: "%.0f", area)) cm²\t\(String(format: "%.0f", min_area)) cm²\t\(String(format: "%.0f", max_area)) cm²
+                Mouth Metrics:
+                        \tCurrent\tMin\tMax
+                L Hemi Dental Show\t\(String(format: "%.1f", left_mouth_area)) mm²\t\(String(format: "%.1f", min_left_mouth_area)) mm²\t\(String(format: "%.1f", max_left_mouth_area)) mm² \t
+                R Hemi Dental Show\t\(String(format: "%.1f", right_mouth_area)) mm²\t\(String(format: "%.1f", min_right_mouth_area)) mm²\t\(String(format: "%.1f", max_right_mouth_area)) mm² \t
+                L Comm. Pos. Lower Lip\t\(String(format: "%.1f", left_bot_lip_mes)) mm\t\(String(format: "%.1f",min_left_bot_lip_mes)) mm\t\(String(format: "%.1f", max_left_bot_lip_mes)) mm \t
+                R Comm. Pos. Lower Lip\t\(String(format: "%.1f", right_bot_lip_mes)) mm\t\(String(format: "%.1f",min_right_bot_lip_mes)) mm\t\(String(format: "%.1f", max_right_bot_lip_mes)) mm \t
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
+        //old values that were displayed:
+        //  L Comm to Top Lip Mid.\t\(String(format: "%.1f", left_top_lip_mes)) mm\t\(String(format: "%.1f",min_left_top_lip_mes)) mm\t\(String(format: "%.1f", max_left_top_lip_mes)) mm \t
+        //  R Comm to Top Lip Mid.\t\(String(format: "%.1f", right_top_lip_mes)) mm\t\(String(format: "%.1f",min_right_top_lip_mes)) mm\t\(String(format: "%.1f", max_right_top_lip_mes)) mm \t
+        //  L Low Lip Height\t\(String(format: "%.1f", left_mouth_vertical)) mm\t\(String(format: "%.1f",min_left_mouth_vertical)) mm\t\(String(format: "%.1f", max_left_mouth_vertical)) mm \t
+       //   R Low Lip Height\t\(String(format: "%.1f", right_mouth_vertical)) mm\t\(String(format: "%.1f",min_right_mouth_vertical)) mm\t\(String(format: "%.1f", max_right_mouth_vertical)) mm \t
         
         // Apply to mouthLabel
         mouthLabel.attributedText = attributedString
@@ -1400,27 +2209,47 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         max_left_eye_height: Float,
         right_eye_height: Float,
         min_right_eye_height: Float,
-        max_right_eye_height: Float
+        max_right_eye_height: Float,
+        right_eye_area: Float,
+        min_right_eye_area: Float,
+        max_right_eye_area: Float,
+        left_eye_area: Float,
+        min_left_eye_area: Float,
+        max_left_eye_area: Float,
+        fp_sym_eye_height: Float,
+        min_fp_sym_eye_height: Float,
+        max_fp_sym_eye_height: Float,
+        np_sym_eye_height: Float,
+        min_np_sym_eye_height: Float,
+        max_np_sym_eye_height: Float,
+        right_eye_width: Float,
+        min_right_eye_width: Float,
+        max_right_eye_width: Float,
+        left_eye_width: Float,
+        min_left_eye_width: Float,
+        max_left_eye_width: Float
     ) {
         let paragraphStyle = NSMutableParagraphStyle()
         
         // Define tab stops at desired positions
         paragraphStyle.tabStops = [
-            NSTextTab(textAlignment: .left, location: 150),
-            NSTextTab(textAlignment: .right, location: 300),
-            NSTextTab(textAlignment: .right, location: 450),
-            NSTextTab(textAlignment: .right, location: 600)
+            NSTextTab(textAlignment: .left, location: 130),
+            NSTextTab(textAlignment: .right, location: 270),
+            NSTextTab(textAlignment: .right, location: 350),
+            NSTextTab(textAlignment: .right, location: 450)
         ]
-        paragraphStyle.defaultTabInterval = 150
+        paragraphStyle.defaultTabInterval = 100
         paragraphStyle.lineBreakMode = .byWordWrapping
         
         // Create attributed string with tab stops
         let attributedString = NSMutableAttributedString(
             string: """
-            Eye Metrics:
-                             \t\tCurrent\tMin\tMax
-            Left Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
-            Right Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
+                Eye Metrics:
+                                         \tCurrent\tMin\tMax
+                L Pal. Fis. Height    \t\(String(format: "%.1f", left_eye_height)) mm\t\(String(format: "%.1f", min_left_eye_height)) mm\t\(String(format: "%.1f", max_left_eye_height)) mm \t
+                R Pal. Fis. Height.    \t\(String(format: "%.1f", right_eye_height)) mm\t\(String(format: "%.1f", min_right_eye_height)) mm\t\(String(format: "%.1f", max_right_eye_height)) mm \t
+                L Pal. Fis. Area\t\(String(format: "%.1f", left_eye_area)) mm²\t\(String(format: "%.1f", min_left_eye_area)) mm²\t\(String(format: "%.1f", max_left_eye_area)) mm² \t
+                R Pal. Fis. Area\t\(String(format: "%.1f", right_eye_area)) mm²\t\(String(format: "%.1f", min_right_eye_area)) mm²\t\(String(format: "%.1f", max_right_eye_area)) mm² \t
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1431,6 +2260,46 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         
         // Ensure background color is set (if not already)
         eyeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+    }
+    
+    func updatedmLabel(
+        pct_dm_left_eye_height: Float,
+        pct_dm_right_eye_height: Float,
+        pct_dm_left_eye_area: Float,
+        pct_dm_right_eye_area: Float,
+        pct_dm_left_ll_movement: Float,
+        pct_dm_right_ll_movement: Float,
+        pct_dm_left_mouth_area: Float,
+        pct_dm_right_mouth_area: Float
+    ) {
+        let paragraphStyle = NSMutableParagraphStyle()
+        
+        // Define tab stops at desired positions
+        paragraphStyle.tabStops = [
+            NSTextTab(textAlignment: .left, location: 150),
+            NSTextTab(textAlignment: .right, location: 300),
+            NSTextTab(textAlignment: .right, location: 450),
+            NSTextTab(textAlignment: .right, location: 550)
+        ]
+        paragraphStyle.defaultTabInterval = 100
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        // Create attributed string with tab stops
+        let attributedString = NSMutableAttributedString(
+            string: """
+            Dynamic Movement Scores:
+                        \t\tLeft\tRight\t
+                        Eye Height\t\t\(String(format: "%.0f", pct_dm_left_eye_height)) %\t\(String(format: "%.0f", pct_dm_right_eye_height)) % 
+                        Eye Area\t\t\(String(format: "%.0f", pct_dm_left_eye_area)) %\t\(String(format: "%.0f", pct_dm_right_eye_area)) % 
+                        Lower Lip Movement\t\(String(format: "%.0f", pct_dm_left_ll_movement)) %\t\(String(format: "%.0f", pct_dm_right_ll_movement)) % 
+                        Mouth Area\t\t\(String(format: "%.0f", pct_dm_left_mouth_area)) %\t\(String(format: "%.0f", pct_dm_right_mouth_area)) % 
+            """,
+            attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
+        )
+        
+        // Apply to dmLabel
+        dmLabel.attributedText = attributedString
+        dmLabel.sizeToFit()
     }
         
     @IBAction func toggleRecording(_ sender: UIButton) {
@@ -1465,9 +2334,14 @@ class ViewController: UIViewController, ARSCNViewDelegate{
                     print("Error starting screen recording: \(error.localizedDescription)")
                 } else {
                     self?.isRecording = true
+                    
+                    DispatchQueue.main.async {
+                                        self?.beginCSVLogging()
+                                    }
                 }
             }
         }
+    
         
         @objc func stopRecording() {
             guard isRecording else { return }
@@ -1476,6 +2350,7 @@ class ViewController: UIViewController, ARSCNViewDelegate{
                     print("Error stopping screen recording: \(error.localizedDescription)")
                 } else {
                     self?.isRecording = false
+                    self?.endCSVLogging()
                     if let previewController = previewController {
                         previewController.previewControllerDelegate = self
                         // Ensure popover presentation on iPad
@@ -1489,11 +2364,259 @@ class ViewController: UIViewController, ARSCNViewDelegate{
                 }
             }
         }
+    // Called once when recording starts: CSV Logging
+      private func beginCSVLogging() {
+          // Build a unique file URL in Documents
+          let fm        = FileManager.default
+          let docs      = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
+          let isoFormatter = ISO8601DateFormatter()
+          isoFormatter.timeZone = TimeZone.current      // ← use local time zone
+          isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+          let timestamp = isoFormatter.string(from: Date())
+          // 3.1a Read the user’s inputs
+          let last  = lastNameField?.text?.trimmingCharacters(in: .whitespacesAndNewlines)  ?? "UnknownLast"
+          let first = firstNameField?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "UnknownFirst"
+          let dob   = dobField?.text?.trimmingCharacters(in: .whitespacesAndNewlines)       ?? "UnknownDOB"
+          let mrn   = mrnField?.text?.trimmingCharacters(in: .whitespacesAndNewlines)       ?? "UnknownMRN"
+          
+             // Build a safe filename:
+             //    "LastName, FirstName, MRN, DOB, 2025-07-03T10:00:00-07:00.csv"
+             let filename = "\(last), \(first), \(mrn), \(dob), \(timestamp).csv"
+               .replacingOccurrences(of: "/", with: "-") // sanitize slashes in DOB
+             let url = docs.appendingPathComponent(filename)
+          
+          // Write header row
+          let header = """
+                frame,\
+                videotime,\
+                TotalMouthArea,\
+                CommissureToCommisureWidth,\
+                LeftMouthVerticalMes,\
+                RightMouthVerticalMes,\
+                LeftTopLipMeasurement,\
+                RightTopLipMeasurement,\
+                LeftBottomLipMeasurement,\
+                RightBottomLipMeasurement,\
+                LeftEyeHeightMeasurement,\
+                RightEyeHeightMeasurement,\
+                LeftEyeArea,\
+                RightEyeArea,\
+                LeftEyeWidthMeasurement,\
+                RightEyeWidthMeasurement,\
+                LeftMouthArea,\
+                RightMouthArea,\
+                LeftDynEyeHeight, \
+                RightDynEyeHeight, \
+                LeftDynEyeArea, \
+                RightDynEyeArea, \
+                LeftDynLLMov, \
+                RightDynLLMov, \
+                LeftDynMouthArea, \
+                RightDynMouthArea,\n
+                """
+          do {
+              try header.write(to: url, atomically: true, encoding: .utf8)
+          } catch {
+              print("⚠️ Failed to write CSV header:", error)
+              return
+          }
+          
+          // Open a handle for appending (iOS-version safe)
+          do {
+              let handle: FileHandle
+              if #available(iOS 13.0, *) {
+                  // Modern API
+                  handle = try FileHandle(forWritingTo: url)
+              } else {
+                  // Fallback for earlier iOS
+                  guard let h = FileHandle(forWritingAtPath: url.path) else {
+                      print("⚠️ Could not open CSV file at path \(url.path)")
+                      return
+                  }
+                  handle = h
+              }
+              handle.seekToEndOfFile()
+              csvFileURL    = url
+              csvFileHandle = handle
+          } catch {
+              print("⚠️ Could not open CSV file handle:", error)
+              return
+          }
+          
+          let landmarkFilename = "landmarks-\(timestamp).csv"
+            let landmarkURL = docs.appendingPathComponent(landmarkFilename)
+            // create an empty file
+            FileManager.default.createFile(atPath: landmarkURL.path, contents: nil, attributes: nil)
+          
+            // open handle (iOS-version safe)
+            #if swift(>=5.1)
+            if #available(iOS 13.0, *) {
+                landmarkFileHandle = try? FileHandle(forWritingTo: landmarkURL)
+            } else {
+                landmarkFileHandle = FileHandle(forWritingAtPath: landmarkURL.path)
+            }
+            #else
+            landmarkFileHandle = FileHandle(forWritingAtPath: landmarkURL.path)
+            #endif
+            landmarkFileHandle?.seekToEndOfFile()
+            landmarkCsvFileURL = landmarkURL
+
+            // Now reset counters & start your timer
+            secondsElapsed = 0
+            frameCounter   = 0     // for the landmark rows
+
+          // reset our second counter here
+          secondsElapsed = 0
+          
+          // Start a 1-second timer to log data points
+          dataTimer = Timer.scheduledTimer(
+            timeInterval: (1/15),
+              target:      self,
+              selector:    #selector(logDataPoint),
+              userInfo:   nil,
+              repeats:     true
+          )
+      }
+      
+    @objc private func logDataPoint() {
+        guard let handle = csvFileHandle else { return }
+
+        // 1) Frame counter
+        secondsElapsed += 1
+        
+        let videotime = Double(secondsElapsed) / 15 //adjust to xFPS
+
+        // 2) Gather your existing measurements
+        let TotalMouthArea               = currentinsideMouthArea
+        let CommissureToCommisureWidth   = currentCommissureWidth
+        let LeftMouthVerticalMes         = currentLeftMouthVertical
+        let RightMouthVerticalMes        = currentRightMouthVertical
+        let LeftTopLipMeasurement        = currentLeftTopLipMes
+        let RightTopLipMeasurement       = currentRightTopLipMes
+        let LeftBottomLipMeasurement     = currentLeftBotLipMes
+        let RightBottomLipMeasurement    = currentRightBotLipMes
+        let LeftEyeHeightMeasurement     = currentleftEyeHeight
+        let RightEyeHeightMeasurement    = currentrightEyeHeight
+        let LeftEyeArea                  = currentinsideLeftEyeArea
+        let RightEyeArea                 = currentinsideRightEyeArea
+        let LeftEyeWidthMeasurement      = currentLeftEyeWidth
+        let RightEyeWidthMeasurement     = currentRightEyeWidth
+        let LeftMouthArea                = currentLeftMouthArea
+        let RightMouthArea               = currentRightMouthArea
+
+        // 3) Declare your delta-variables **before** the if/else
+        var LeftDynEyeHeight: Float
+        var RightDynEyeHeight: Float
+        var LeftDynEyeArea: Float
+        var RightDynEyeArea: Float
+        var LeftDynLLMov: Float
+        var RightDynLLMov: Float
+        var LeftDynMouthArea: Float
+        var RightDynMouthArea: Float
+
+        // 4) Assign to them based on whether neutralExpression exists
+        if let neutral = neutralExpression {
+            LeftDynEyeHeight   = currentpctDMLeftEyeHeight
+            RightDynEyeHeight  = currentpctDMRightEyeHeight
+            LeftDynEyeArea     = currentpctDMLeftEyeArea
+            RightDynEyeArea    = currentpctDMRightEyeArea
+            LeftDynLLMov       = currentpctDMLeftLLMovement
+            RightDynLLMov      = currentpctDMRightLLMovement
+            LeftDynMouthArea   = currentpctDMLeftMouthArea
+            RightDynMouthArea  = currentpctDMRightMouthArea
+        } else {
+            // no baseline → use NaN, used for when neutral expression is not set
+            LeftDynEyeHeight   = Float.nan
+            RightDynEyeHeight  = Float.nan
+            LeftDynEyeArea     = Float.nan
+            RightDynEyeArea    = Float.nan
+            LeftDynLLMov       = Float.nan
+            RightDynLLMov      = Float.nan
+            LeftDynMouthArea   = Float.nan
+            RightDynMouthArea  = Float.nan
+        }
+
+        // 5) Build and write the CSV line
+        let line = """
+        \(secondsElapsed),\
+        \(videotime),\
+        \(TotalMouthArea),\
+        \(CommissureToCommisureWidth),\
+        \(LeftMouthVerticalMes),\
+        \(RightMouthVerticalMes),\
+        \(LeftTopLipMeasurement),\
+        \(RightTopLipMeasurement),\
+        \(LeftBottomLipMeasurement),\
+        \(RightBottomLipMeasurement),\
+        \(LeftEyeHeightMeasurement),\
+        \(RightEyeHeightMeasurement),\
+        \(LeftEyeArea),\
+        \(RightEyeArea),\
+        \(LeftEyeWidthMeasurement),\
+        \(RightEyeWidthMeasurement),\
+        \(LeftMouthArea),\
+        \(RightMouthArea),\
+        \(LeftDynEyeHeight),\
+        \(RightDynEyeHeight),\
+        \(LeftDynEyeArea),\
+        \(RightDynEyeArea),\
+        \(LeftDynLLMov),\
+        \(RightDynLLMov),\
+        \(LeftDynMouthArea),\
+        \(RightDynMouthArea)\n
+        """
+
+        if let data = line.data(using: .utf8) {
+            handle.write(data)
+        }
+    }
+        
+
+      
+      // Called once when recording ends
+      private func endCSVLogging() {
+          // Stop the timer
+          dataTimer?.invalidate()
+          dataTimer = nil
+          
+          // Close the file handle
+          csvFileHandle?.closeFile()
+          csvFileHandle = nil
+          
+          // close landmarks CSV
+            landmarkFileHandle?.closeFile()
+            landmarkFileHandle = nil
+      }
+
+    //export CSV button (two CSVs being exported)
+    @IBAction func exportCSVPressed(_ sender: Any) {
+        // Unwrap both CSV file URLs
+        guard let metricsURL   = csvFileURL,
+              let landmarksURL = landmarkCsvFileURL else {
+            let alert = UIAlertController(
+                title: "No Data",
+                message: "No CSV files available to export.",
+                preferredStyle: .alert
+            )
+            alert.addAction(.init(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        // Present the “Save to…” document picker with both files
+        let picker = UIDocumentPickerViewController(
+            forExporting: [metricsURL, landmarksURL],
+            asCopy: true
+        )
+        picker.delegate = self
+        picker.modalPresentationStyle = .formSheet
+        present(picker, animated: true)
+    }
         
 //        @objc func startRecordingTapped() {
 //            startRecording()
 //        }
-//        
+//
 //        @objc func stopRecordingTapped() {
 //            stopRecording()
 //        }
@@ -1556,4 +2679,12 @@ struct FaceRecord: Codable {
     let minRightEyeClosure: Float
 }
 
-
+extension SCNVector3 {
+  // Straight-line distance between two SCNVector3: used for lip measuerments (essentially 3D Py. Theorem.)
+  func distance(to v: SCNVector3) -> Float {
+    let dx = x - v.x
+    let dy = y - v.y
+    let dz = z - v.z
+    return sqrt(dx*dx + dy*dy + dz*dz)
+  }
+}
