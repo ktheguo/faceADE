@@ -47,6 +47,26 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
     private var neutralExpression: NeutralExpressionValues?
     
     @IBOutlet weak var sceneView: ARSCNView!
+    @IBOutlet weak var contentView: UIView!
+    
+    // scale the UI buttons
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        let safeFrame = view.safeAreaLayoutGuide.layoutFrame
+        let available = safeFrame.size
+
+        let designSize = CGSize(width: 834, height: 1194) // size for ipad
+
+        let s = min(available.width / designSize.width,
+                    available.height / designSize.height)
+
+        contentView.transform = .identity
+        contentView.bounds.size = designSize
+        contentView.center = CGPoint(x: safeFrame.midX, y: safeFrame.maxY + 150) // magic number to fit on phone...sorry
+        contentView.transform = CGAffineTransform(scaleX: s, y: s)
+    }
+    
    
     //creating switches for mesh and dots
     @IBOutlet weak var meshSwitch: UISwitch!
@@ -354,7 +374,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
     var resetButton: UIButton!
     var saveRestingButton: UIButton!
     
-    var toolbar: UIToolbar!
+    @IBOutlet weak var toolbar: UIToolbar!
 //    var videoWriter: AVAssetWriter?
 //    var videoWriterInput: AVAssetWriterInput?
 //    var videoWriterAdaptor: AVAssetWriterInputPixelBufferAdaptor?
@@ -393,11 +413,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        
+                
         sceneView.delegate = self
         
         meshSwitch.isOn = isMeshEnabled
         dotsSwitch.isOn = isDotsEnabled
+        
+        for button in [setNeutralButton, screenshotButton, recordingButton, clearButton] {
+            button?.titleLabel?.adjustsFontSizeToFitWidth = true
+            button?.titleLabel?.minimumScaleFactor = 0.5
+        }
         
        
         // Create the ARSCNFaceGeometry
@@ -584,7 +609,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         dmLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         dmLabel.textAlignment = .center
         dmLabel.numberOfLines = 0 // Allow multiple lines
-        dmLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        dmLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         
         // a) horizontal stack for the top two
         let topRow = UIStackView(arrangedSubviews: [mouthLabel, eyeLabel])
