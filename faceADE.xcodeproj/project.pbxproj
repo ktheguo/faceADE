@@ -450,7 +450,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = 5V235X5JKH;
+				DEVELOPMENT_TEAM = 96QUKLQ928;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = faceADE/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
@@ -467,8 +467,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 8.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Katherine-Guo.faceADE";
+				MARKETING_VERSION = 9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Anthony-Newman.faceADE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -487,7 +487,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = 5V235X5JKH;
+				DEVELOPMENT_TEAM = 96QUKLQ928;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = faceADE/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
@@ -504,8 +504,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 8.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Katherine-Guo.faceADE";
+				MARKETING_VERSION = 9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Anthony-Newman.faceADE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
