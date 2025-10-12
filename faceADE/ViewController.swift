@@ -52,6 +52,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
     // scale the UI buttons
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+                        tap.cancelsTouchesInView = false
+                        view.addGestureRecognizer(tap)
 
         let safeFrame = view.safeAreaLayoutGuide.layoutFrame
         let available = safeFrame.size
@@ -2612,6 +2616,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
             landmarkFileHandle?.closeFile()
             landmarkFileHandle = nil
       }
+    
+    @objc private func dismissKeyboard() {
+               view.endEditing(true)
+           }
 
     //export CSV button (two CSVs being exported)
     @IBAction func exportCSVPressed(_ sender: Any) {
