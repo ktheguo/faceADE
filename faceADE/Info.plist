@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>faceADE uses the camera and TrueDepth system to analyze your facial movements in real time to measure facial symmetry. You can optionally save screenshots or recordings to your Photos library. No data are uploaded or shared.</string>
+	<string>faceADE uses the front camera and TrueDepth system to analyze your facial movements in real time and report facial measurements.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>faceADE allows you to save screenshots or video recordings of your facial symmetry session to your Photos library. Saved media stay on your device and are not uploaded or shared.</string>
+	<string>faceADE allows you to save screenshots and video recordings of the app&apos;s live measurements to your Photos library.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
