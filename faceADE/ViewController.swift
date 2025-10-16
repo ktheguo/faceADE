@@ -52,10 +52,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
     // scale the UI buttons
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-                        tap.cancelsTouchesInView = false
-                        view.addGestureRecognizer(tap)
 
         let safeFrame = view.safeAreaLayoutGuide.layoutFrame
         let available = safeFrame.size
@@ -120,7 +116,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         }
 
            // Request permission & save into Photos
-           PHPhotoLibrary.requestAuthorization { status in
+           PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                guard status == .authorized else {
                    print("📷 Photo library access denied")
                    return
@@ -159,7 +155,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
            }
 
            // Ask for permission and save to Photos
-           PHPhotoLibrary.requestAuthorization { status in
+           PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                guard status == .authorized else {
                    print("📷 Photo library access denied")
                    return
@@ -444,7 +440,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         setupUI()
         requestPhotoLibraryPermissions()
         
-
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+                        tap.cancelsTouchesInView = false
+                        view.addGestureRecognizer(tap)
         
         // Initialize and configure the label
         //        symmetryLabel = UILabel()
@@ -1598,7 +1596,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
     }
         
         func requestPhotoLibraryPermissions() {
-            PHPhotoLibrary.requestAuthorization { status in
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                 if status != .authorized {
                     print("Photo library access not authorized")
                 }
@@ -2662,7 +2660,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
                 return
             }
             
-            PHPhotoLibrary.requestAuthorization { status in
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                 guard status == .authorized else {
                     print("Error: Photo library access not authorized")
                     return
