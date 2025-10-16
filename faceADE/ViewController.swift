@@ -2330,7 +2330,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
     }
         
     @IBAction func toggleRecording(_ sender: UIButton) {
-        print("help me")
         if isRecording {
             stopRecording()
             sender.setTitle("Start Recording", for: .normal)

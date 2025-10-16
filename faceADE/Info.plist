@@ -4,8 +4,10 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>faceADE uses the front camera and TrueDepth system to analyze your facial movements in real time and report facial measurements.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This allows faceADE to save screenshots and video recordings of the app&apos;s live measurements to your Photos library.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This allows faceADE to save screenshots and video recordings of the app&apos;s live measurements to your Photos library, so you can review your results or share them with your healthcare provider.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Enable microphone access if you wish to include audio as part of your facial measurement screen recording.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

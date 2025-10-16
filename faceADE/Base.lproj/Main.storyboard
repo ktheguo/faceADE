@@ -19,33 +19,6 @@
                             <arscnView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" insetsLayoutMarginsFromSafeArea="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sHA-wJ-gP1">
                                 <rect key="frame" x="0.0" y="-117" width="440" height="995"/>
                             </arscnView>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5SD-BH-Af1">
-                                <rect key="frame" x="0.0" y="878" width="440" height="44"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="44" id="EXW-nt-naG"/>
-                                </constraints>
-                                <items>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="Aav-Ah-SaB"/>
-                                    <barButtonItem style="plain" id="1rr-1H-sIC">
-                                        <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="BCO-Kz-vhR">
-                                            <rect key="frame" x="35.333333333333343" y="4.6666666666666679" width="189" height="35"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                            <state key="normal" title="Button"/>
-                                            <buttonConfiguration key="configuration" style="plain" title="Start Recording"/>
-                                            <connections>
-                                                <action selector="toggleRecording:" destination="BYZ-38-t0r" eventType="touchUpInside" id="loC-L4-Py7"/>
-                                            </connections>
-                                        </button>
-                                    </barButtonItem>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="t3j-ku-rXu"/>
-                                    <barButtonItem title="Reset Numbers" id="TZp-to-O83">
-                                        <connections>
-                                            <action selector="resetMaxValues:" destination="BYZ-38-t0r" id="Aw4-lF-a5Q"/>
-                                        </connections>
-                                    </barButtonItem>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="IFA-B2-vBw"/>
-                                </items>
-                            </toolbar>
                             <view contentMode="bottomLeft" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g4n-w0-udo">
                                 <rect key="frame" x="-2" y="983" width="836" height="144"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -167,6 +140,33 @@
                                 </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5SD-BH-Af1">
+                                <rect key="frame" x="0.0" y="856" width="440" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="EXW-nt-naG"/>
+                                </constraints>
+                                <items>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="Aav-Ah-SaB"/>
+                                    <barButtonItem style="plain" id="1rr-1H-sIC">
+                                        <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="BCO-Kz-vhR">
+                                            <rect key="frame" x="35.333333333333343" y="4.6666666666666679" width="189" height="35"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <state key="normal" title="Button"/>
+                                            <buttonConfiguration key="configuration" style="plain" title="Start Recording"/>
+                                            <connections>
+                                                <action selector="toggleRecording:" destination="BYZ-38-t0r" eventType="touchUpInside" id="loC-L4-Py7"/>
+                                            </connections>
+                                        </button>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="t3j-ku-rXu"/>
+                                    <barButtonItem title="Reset Numbers" id="TZp-to-O83">
+                                        <connections>
+                                            <action selector="resetMaxValues:" destination="BYZ-38-t0r" id="Aw4-lF-a5Q"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="IFA-B2-vBw"/>
+                                </items>
+                            </toolbar>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
