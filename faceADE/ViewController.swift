@@ -658,82 +658,82 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         showSmileDataButton.isEnabled = false
         
       
-      
-    // ⬇︎ labels only on iPad
-        if traitCollection.userInterfaceIdiom == .pad {
-            // Initialize and add symmetryLabel
-            symmetryLabel = UILabel()
-            symmetryLabel?.translatesAutoresizingMaskIntoConstraints = false
-            symmetryLabel?.textColor = .white
-            symmetryLabel?.backgroundColor = .clear
-            symmetryLabel?.textAlignment = .center
-            if let sym = symmetryLabel {
-                sym.numberOfLines = 0
-                view.addSubview(sym)
-            }
-            
-            // Constraints for symmetryLabel
-            NSLayoutConstraint.activate([
-                symmetryLabel?.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-                symmetryLabel?.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100),
-                symmetryLabel?.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
-                symmetryLabel?.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
-            ] as! [NSLayoutConstraint])
-            
-            // iPad-only overlay labels
-            // Initialize and configure mouthLabel
-            let mouth = UILabel()
-            mouth.translatesAutoresizingMaskIntoConstraints = false
-            mouth.textColor = .white
-            mouth.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-            mouth.textAlignment = .left
-            mouth.numberOfLines = 0 // Allow multiple lines
-            mouth.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-            self.mouthLabel = mouth
-
-            // Initialize and configure eyeLabel
-            let eye = UILabel()
-            eye.translatesAutoresizingMaskIntoConstraints = false
-            eye.textColor = .white
-            eye.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-            eye.textAlignment = .left
-            eye.numberOfLines = 0 // Allow multiple lines
-            eye.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-            self.eyeLabel = eye
-
-            // Initialize and configure dmLabel (for dynamic movement scores)
-            let dm = UILabel()
-            dm.translatesAutoresizingMaskIntoConstraints = false
-            dm.textColor = .white
-            dm.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-            dm.textAlignment = .center
-            dm.numberOfLines = 0 // Allow multiple lines
-            dm.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-            self.dmLabel = dm
-
-            // a) horizontal stack for the top two
-            let topRow = UIStackView(arrangedSubviews: [mouth, eye])
-            topRow.axis         = .horizontal
-            topRow.spacing      = 8
-            topRow.distribution = .fillEqually
-
-            // b) vertical stack that contains that row above + the dmLabel
-            let container = UIStackView(arrangedSubviews: [topRow, dm])
-            container.axis         = .vertical
-            container.spacing      = 12
-            container.alignment    = .center
-            container.distribution = .fillProportionally
-            container.translatesAutoresizingMaskIntoConstraints = false
-
-            view.addSubview(container)
-            
-            NSLayoutConstraint.activate([
-                container.topAnchor.constraint(    equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
-                container.leadingAnchor.constraint(equalTo: view.leadingAnchor,                    constant: 20),
-                container.trailingAnchor.constraint(equalTo: view.trailingAnchor,                   constant: -20),
-            ])
-            
-        }
+    
+//    // ⬇︎ labels only on iPad
+//        if traitCollection.userInterfaceIdiom == .pad {
+//            // Initialize and add symmetryLabel
+//            symmetryLabel = UILabel()
+//            symmetryLabel?.translatesAutoresizingMaskIntoConstraints = false
+//            symmetryLabel?.textColor = .white
+//            symmetryLabel?.backgroundColor = .clear
+//            symmetryLabel?.textAlignment = .center
+//            if let sym = symmetryLabel {
+//                sym.numberOfLines = 0
+//                view.addSubview(sym)
+//            }
+//            
+//            // Constraints for symmetryLabel
+//            NSLayoutConstraint.activate([
+//                symmetryLabel?.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+//                symmetryLabel?.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100),
+//                symmetryLabel?.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
+//                symmetryLabel?.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20)
+//            ] as! [NSLayoutConstraint])
+//            
+//            // iPad-only overlay labels
+//            // Initialize and configure mouthLabel
+//            let mouth = UILabel()
+//            mouth.translatesAutoresizingMaskIntoConstraints = false
+//            mouth.textColor = .white
+//            mouth.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+//            mouth.textAlignment = .left
+//            mouth.numberOfLines = 0 // Allow multiple lines
+//            mouth.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+//            self.mouthLabel = mouth
+//
+//            // Initialize and configure eyeLabel
+//            let eye = UILabel()
+//            eye.translatesAutoresizingMaskIntoConstraints = false
+//            eye.textColor = .white
+//            eye.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+//            eye.textAlignment = .left
+//            eye.numberOfLines = 0 // Allow multiple lines
+//            eye.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+//            self.eyeLabel = eye
+//
+//            // Initialize and configure dmLabel (for dynamic movement scores)
+//            let dm = UILabel()
+//            dm.translatesAutoresizingMaskIntoConstraints = false
+//            dm.textColor = .white
+//            dm.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+//            dm.textAlignment = .center
+//            dm.numberOfLines = 0 // Allow multiple lines
+//            dm.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+//            self.dmLabel = dm
+//
+//            // a) horizontal stack for the top two
+//            let topRow = UIStackView(arrangedSubviews: [mouth, eye])
+//            topRow.axis         = .horizontal
+//            topRow.spacing      = 8
+//            topRow.distribution = .fillEqually
+//
+//            // b) vertical stack that contains that row above + the dmLabel
+//            let container = UIStackView(arrangedSubviews: [topRow, dm])
+//            container.axis         = .vertical
+//            container.spacing      = 12
+//            container.alignment    = .center
+//            container.distribution = .fillProportionally
+//            container.translatesAutoresizingMaskIntoConstraints = false
+//
+//            view.addSubview(container)
+//            
+//            NSLayoutConstraint.activate([
+//                container.topAnchor.constraint(    equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
+//                container.leadingAnchor.constraint(equalTo: view.leadingAnchor,                    constant: 20),
+//                container.trailingAnchor.constraint(equalTo: view.trailingAnchor,                   constant: -20),
+//            ])
+//            
+//        }
             
         
 //        // Initialize and add pickerView
@@ -2052,7 +2052,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         minRightMouthArea = .greatestFiniteMagnitude
         maxRightMouthArea = 0.0
         neutralExpression   = nil
-        setNeutralButton.setTitle("Capture Data", for: .normal)
+        setNeutralButton.setTitle("Quick Exam", for: .normal)
         
         
         
@@ -2533,9 +2533,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
 
         view.addSubview(promptLabel)
 
-        // --- CAPTURE DATA BUTTON ---
+        // --- CAPTURE DATA/Quick Exam BUTTON ---
         var config = UIButton.Configuration.filled()
-        config.title = "Capture Data"
+        config.title = "Quick Exam"
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.cornerStyle = .capsule
@@ -3079,8 +3079,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
           • Left Eye Closure Height: \(f(eyeMinLeftHeight))mm
           • Right Eye Closure Height: \(f(eyeMinRightHeight))mm
           
-          • Left Eye Closure Area: \(f(eyeMinInsideLeftArea))mm²
-          • Right Eye Closure Area: \(f(eyeMinInsideRightArea))mm²
+          • Left Eye Surface Area: \(f(eyeMinInsideLeftArea))mm²
+          • Right Eye Surface Area: \(f(eyeMinInsideRightArea))mm²
           """
 
           let smileSection = """
@@ -3088,8 +3088,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
           • Left Commisure Change: \(f(leftBotRange))mm
           • Right Commisure Change: \(f(rightBotRange))mm
           
-          • Left Mouth Area Change: \(f(leftMouthRange))mm²
-          • Right Mouth Area Change: \(f(rightMouthRange))mm²
+          • Left Dental Show Change: \(f(leftMouthRange))mm²
+          • Right Dental Show Change: \(f(rightMouthRange))mm²
           """
 
           return """
