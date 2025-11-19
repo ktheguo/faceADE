@@ -1311,10 +1311,10 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         let attributedString = NSMutableAttributedString(
             string: """
                              \t\tCurrent\tMin\tMax
-            Left Lip Corner Width\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
-            Right Lip Corner Width\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
-            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
-            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
+            L Lip Corner Width\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
+            R Lip Corner Width\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
+            L Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
+            R Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1342,8 +1342,8 @@ class ViewController: UIViewController, ARSCNViewDelegate{
         let attributedString = NSMutableAttributedString(
             string: """
                              \t\tCurrent\tMin\tMax
-            Left Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
-            Right Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
+            L Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
+            R Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1380,11 +1380,11 @@ class ViewController: UIViewController, ARSCNViewDelegate{
             string: """
             Mouth Metrics:
             \t\tCurrent\tMin\tMax
-            Left Lip Corner Offset\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
-            Right Lip Corner Offset\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
-            Left Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
-            Right Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
-            Dental Show Area\t\t\(String(format: "%.0f", area)) cm²\t\(String(format: "%.0f", min_area)) cm²\t\(String(format: "%.0f", max_area)) cm²
+            L Lip Corner Offset\t\(String(format: "%.2f", left_x)) cm\t\(String(format: "%.2f", min_left_x)) cm\t\(String(format: "%.2f", max_left_x)) cm
+            R Lip Corner Offset\t\(String(format: "%.2f", right_x)) cm\t\(String(format: "%.2f", min_right_x)) cm\t\(String(format: "%.2f", max_right_x)) cm
+            L Lip Corner Elevation\t\(String(format: "%.2f", left_y)) cm\t\(String(format: "%.2f", min_left_y)) cm\t\(String(format: "%.2f", max_left_y)) cm
+            R Lip Corner Elevation\t\(String(format: "%.2f", right_y)) cm\t\(String(format: "%.2f", min_right_y)) cm\t\(String(format: "%.2f", max_right_y)) cm
+            Dental Show\t\t\(String(format: "%.0f", area)) cm²\t\(String(format: "%.0f", min_area)) cm²\t\(String(format: "%.0f", max_area)) cm²
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
@@ -1419,8 +1419,8 @@ class ViewController: UIViewController, ARSCNViewDelegate{
             string: """
             Eye Metrics:
                              \t\tCurrent\tMin\tMax
-            Left Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
-            Right Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
+            L Eye Height           \t\(String(format: "%.2f", left_eye_height)) cm\t\(String(format: "%.2f", min_left_eye_height)) cm\t\(String(format: "%.2f", max_left_eye_height)) cm
+            R Eye Height          \t\(String(format: "%.2f", right_eye_height)) cm\t\(String(format: "%.2f", min_right_eye_height)) cm\t\(String(format: "%.2f", max_right_eye_height)) cm
             """,
             attributes: [.paragraphStyle: paragraphStyle, .foregroundColor: UIColor.white]
         )
