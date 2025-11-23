@@ -529,6 +529,20 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
                         tap.cancelsTouchesInView = false
                         view.addGestureRecognizer(tap)
         
+        // add for moving app UI up/down with keyboard
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+        
         // Initialize and configure the label
         //        symmetryLabel = UILabel()
         //        symmetryLabel.frame = CGRect(x: 20, y: 100, width: 1000, height: 40)
@@ -591,6 +605,24 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
         //       stopRecordingButton.addTarget(self, action: #selector(stopRecordingTapped), for: .touchUpInside)
         //
         //       self.view.addSubview(stopRecordingButton)
+    }
+    
+    // add for moving UI up/down with keyboard
+    @objc func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame =
+                notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+
+        // Shift contentView up only once
+        if self.view.frame.origin.y == 0 {
+            self.view.frame.origin.y -= keyboardFrame.height
+        }
+    }
+
+    @objc func keyboardWillHide(_ notification: Notification) {
+        // Move it back down
+        if self.view.frame.origin.y != 0 {
+            self.view.frame.origin.y = 0
+        }
     }
     
     func setupUI() {
@@ -2653,7 +2685,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
 
     // MARK: - PHASE 4: Eye capture 5s
     private func startEyeCapturePhase() {
-        updatePrompt(to: "Gently close your eyes")
+        updatePrompt(to: "Gently close your eyes for 5 seconds")
 
         // track min eye values DURING capture
         var minLeftEyeHeight: Float = .greatestFiniteMagnitude
