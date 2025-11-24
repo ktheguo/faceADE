@@ -3148,11 +3148,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, UIDocumentPickerDeleg
           let mrn   = mrnField.text?.trimmingCharacters(in: .whitespacesAndNewlines)       ?? "UnknownMRN"
 
           
-             // Build a safe filename:
-             //    "LastName, FirstName, MRN, DOB, 2025-07-03T10:00:00-07:00.csv"
-             let filename = "\(last), \(first), \(mrn), \(dob), \(timestamp).csv"
-               .replacingOccurrences(of: "/", with: "-") // sanitize slashes in DOB
-             let url = docs.appendingPathComponent(filename)
+          // Build a safe filename:
+          //    "LastName, FirstName, MRN, DOB, 2025-07-03T10:00:00-07:00.csv"
+          // Sanitizes illegal chars in iOS filenames, replacing with "-"
+          func safeFilename(_ input: String) -> String {
+              let illegal = CharacterSet(charactersIn: "/\\?%*|\"<>:")
+              return input.components(separatedBy: illegal).joined(separator: "-")
+          }
+          let filename = "\(last), \(first), \(mrn), \(dob), \(timestamp).csv"
+          let safename = safeFilename(filename)
+          let url = docs.appendingPathComponent(safename)
           
           // Write header row
           let header = """
